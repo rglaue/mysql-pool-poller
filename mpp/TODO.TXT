@@ -1,0 +1,27 @@
+TO DO
+------------------------------
+
+[revision 1.02.000]
+-----REPORTING-----
+[ ] Generate output optionally in XML upon request, using a 'xml' option flag,
+    or 'format=xml'. Default output should still remain the human readable
+    plain-text format that has already been used. Perhaps use MIME Types.
+
+[revision 1.01.000]
+-----POLLING-----
+[ ] Add a timing mechanism to time how long it takes to make a poll iteration
+    for a pool as well as the hosts in the pool. (Record result to log)
+-----LOGGING-----
+[ ] Update the Logging mechanism to allow the MODE of a log file to be set
+[ ] Change the location of where the activity log is initialized so that
+    requests via HTTP will not initialize the logging mechanism.
+[ ] Split log file into seperate logs, one for each pool. So instead of having
+    the one log file /tmp/cache_file.log we will now have multiple log files:
+      /tmp/cache_file-poolname1.log
+      /tmp/cache_file-poolname2.log
+      etc...
+[ ] Add to log output the timing results of polling. (From timing mechanism)
+
+[revision 1.00.000]
+-----GENERAL-----
+[x] Make stable useful version
