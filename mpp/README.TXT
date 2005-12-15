@@ -1,0 +1,59 @@
+MySQL Pool & Poller
+
+ver 1.00.000 / 20051214
+
+
+DESCRIPTION
+
+This application and libraries are used to manage the individual statuses and
+group states of mysql servers participating in a pool.
+
+As of version 1.0, a failover pool is the only pool type that is configurable.
+In a failover pool, one or more real servers participate as a group to keep a
+MySQL Virtual Server up 24x7. With only one real server allowed to respond for
+the MySQL Virtual Server at a single time. The MySQL Virtual Server's actual
+connectivity is managed by a third-party redundancy mechanism. This application
+is used to determine which server is the ACTIVE server at any given time.
+
+This application is used to determine which MySQL Real Server participating in a
+pool is the current ACTIVE server responding to requests for the MySQL Virtual
+Server.
+
+The redundancy mechanism simply makes a request asking if a particular server it
+manages is supposed to be active or not. Supposedly, a server that is in a state
+of ACTIVE will be the one responding for the Virtual Server while the remaining
+MySQL servers in the pool will remain in a deactivated state.
+
+
+THIRD-PARTY REDUNDANCY MECHANISMS
+
+The following load balancers have been tested with this application:
+    Red Hat Cluster Suite (a.k.a. Piranha) (Built on top of LinuxVirtualServer)
+        Red Hat Inc.
+	https://www.redhat.com/apps/commerce/rha/cluster/
+    Linux Virtual Server (a.k.a. LVS)
+        The Linux Virtual Server Project
+        http://www.linuxvirtualserver.org/
+
+
+THIRD-PARTY MONITORING MECHANISMS
+
+The following monitoring applications are expected to work with this application:
+    Nagios
+        Nagios.org
+        http://www.nagios.org/
+
+
+REQUIRED PERL MODULES
+
+  MODULE	MIN VERSION
+  -----------	-----------
+  CGIbasic	0.010
+  Config_info	1.00803
+  LogBasic	0.00.003
+  Storable	PERL >= 5.8
+  Net::HTTP	PERL >= 5.8
+  Net::Ping	PERL >= 5.8
+  IO::FILE	PERL >= 5.8
+  DBD::MySQL	2.9006
+  DBI		1.46

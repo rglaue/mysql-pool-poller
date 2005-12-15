@@ -1,0 +1,186 @@
+INSTALLATION
+------------------------------
+
+APPLICATION LOCATION
+
+This application is expecting to be installed in the following path:
+  /usr/local/lib-monitor/mysqlfailoverpool
+
+However, this is very easily changed by modifying one line in the
+mysql-poller.pl file near the top.
+Change the following line to the correct path to the installation directory:
+  use lib '/usr/local/lib-monitor/mysqlfailoverpool';
+
+So feel free to install anywhere you believe is best.
+
+You need not configure any other setting if you choose to use the defaults.
+
+
+CACHE AND LOG FILES LOCATION
+
+By default, cache files and activity logs are created and maintained in the
+following directory:
+  /tmp
+
+You can change the location to whereever you wish by doing one of two things.
+Change the path of the default cache file in the mysql-poller.pl file by simply
+modifying the $cachefile_dir variable. Or use the --cache-file flag when
+invoking the poller.
+
+As of version 1.0, it is not possible to store the activity log file in a
+directory location different from the cache file without altering the code
+in the mysql-poller.pl file. By default, the activity log is the same name and
+location of the cache file but with a ".log" extension.
+So each cache file created will have its own activity log file.
+
+Note about accessing the poller stats via HTTP.
+THE LOG FILE: The log file must be writable by the HTTP process owner although
+the log file is never actually written to when requesting stats via HTTP.
+THE CACHE FILES: To access stats from a cache file, the cache file must be
+configured in the mysql-poller.pl %HTTP_CONFIG variable. It is in the format
+of "keyname" => "/path/to/cache/file", with the exception of the "default"
+keyname. The value of the "default" keyname is the name of another keyname
+you wish to have identified as default.
+The Access URL for the stats ends up being this format:
+http://servername:port/cgi-bin/mysql-poller.pl/keyname/poolname?option=value&option=value
+
+Refer to the mysql-poller help (--help) for more information.
+
+
+WARNING AND FAILURE LEVELS
+
+There are two managed variables identifying the warning and failure levels of
+the mysql servers as they are polled.
+These two variables are:
+  $maxRequests  = INTEGER
+  $requestLevel = HASH_REFERENCE
+
+These variables are located in the BEGIN function of the mysql-poller.pl file,
+which is near the top of the file.
+
+You can set the levels to however many you feel is necessary and what the name
+of the level is. By default there are 6 levels, and the maximum allowed requests
+before failure is 5.
+
+The current 6 levels are as follows:
+	0 => 'OK'
+	1 => 'OK INFO'
+	2 => 'OK WARN'
+	3 => 'OK SOFT'
+	4 => 'OK HARD'
+	5 => 'FAIL CRITICAL'
+
+Again, you may change the name of each level to whatever you wish. The name of
+the level is what is reported when a call is made to report on a particular
+real server.
+Example:
+  unix% mysql-poller.pl --failoverpool=name:poolname --report=server1name:3306
+  OK INFO/1: (OK_WARN/ACTIVE) PRIMARY instatement to ACTIVE complete.
+  unix% mysql-poller.pl --failoverpool=name:poolname --report=server2name:3306
+  OK WARN/2: (OK_WARN/STANDBY) Could not connect to mysql host server2name:3306: Lost connection to MySQL server during query
+
+Note, however, when a server changes from ACTIVE to STANDBY, or STANDBY
+to ACTIVE the request level is automatically increased by 1. This is intended
+to note a change in the Real Server's status and state. Don't let this alarm
+you as the pool logic does not allow a Real Server's state to change to ACTIVE
+unless it's current request level at the time of change is 0. So the Real
+Server's request level will change to 1 when becoming ACTIVE, but on the next
+POLL CYCLE it will return to 0 (assuming everything is okay with it).
+	A level of 1 is intended to be an informative level, and the minimum
+recommend number of levels is 2 being: 0 = OK, 1 = INFO, 2 = FAIL. If you want
+Real Server to fail faster, you should increase the time between polling. See,
+"POLLING INTERVAL" below.
+	It is recommended that at least two levels exist because sometimes there
+may be a one-time quark in the connection from the poller to the mysql server
+which will be correct before a subsequent poll. As well there is often the
+STANDBY server getting behind in its replication from the master which is also
+corrected before a subsequest poll. Both times you want to give the STANDBY time
+to recover instead of failing. Remember, the logic will not allow a STANDBY to
+become ACTIVE unless its its request level is 0. And if there are any lower
+priority STANDBY servers, they must wait for the higher priority STANDBY server
+to FAIL ($maxRequests) before being allowed to take over as ACTIVE.
+
+If you are using a monitoring application like Nagios, nagios will maintain the
+status and how it reports the status based on the string given it. So you
+should want to configure the name of each level based on how that level should
+be interpreted by a third-party application.
+
+The $maxRequests variable is what the pool logic uses to determine if a server
+should go into a failure state. The default is 5. So if the poller fails to
+connect to the server 5 times, after the fifth time the server will be put into
+a state of FAIL. This variable only determines after how many failed pollings
+the MySQL Real Server should be put into FAIL state.
+
+If you believe 5 requests is too many, you can change the number of levels to 3
+with the following configuration:
+  $requestLevels = {
+	0 => 'OK',
+	1 => 'OK INFO',
+	2 => 'OK SOFT',
+	3 => 'FAIL CRITICAL' }
+  $maxRequests = 3;
+
+
+POLLING INTERVAL
+
+The time between polling is determined by the mechanism that invokes the
+poller. The recommended polling interval is between 3 to 5 minutes. If you
+have more that 12 pools with many Real Servers in each, all with checkpoints,
+it is recommended that the pools be split up into several cache files and
+invoked in seperate processes.
+	Having each pool polled in seperate processes, yet still maintained in
+one cache file is not highly recommended. The reason is that each process will
+have to wait to read and/or save the cache in a competition with the other
+polling processes that use the same cache file.
+
+The easiest way to find out the best polling interval time for your set up is
+to configure all the pools in one cache file, then run a pool cycle using the
+flag --poll-cached-pools. Then open the log file and look at the time it took
+from the first entry to the last for the process to complete the polling
+cycles. Then you should double (or maybe triple to be extra safe) that number
+to account for the additional time to complete should a Real Server fail and
+the polling process takes longer to complete.
+	Note that when a Real Server fails, all checkpoints configured for the
+real server (if any) are polled which will take extra time to complete.
+
+The recomended mechanism to invoke polling is cron. If you want to invoke the
+mysql-poller.pl application every 3 minutes, you would add the following cron
+entry:
+  */3 * * * * /path/to/install/directory/mysql-poller.pl --poll-cached-pools
+This cron entry assumes you are using the default cache file.
+
+
+CHECKPOINT THEOLOGY
+
+Checkpoints are used to ensure that when the poller cannot connect to the Real
+Server, the problem is the Real Server and not the network connectivity of
+the poller.
+
+There are three checkpoint types:
+  internal  - a server on the same internal network as the real server
+  edge      - a server that sits in between the real server and the external
+              network (or internet) like a router or firewall. This should be
+              a network device/server the Real Server must go through to get
+              to the external network.
+  external  - a server that sits on the external network (or internet). This
+              must be a server that all pollers can connect to should one of
+              the pollers' network have a complete failure.
+
+If a Real Server is seen as down by a poller, and that poller cannot connect to
+the Real Server's external, edge, and internal checkpoints, the poller will
+consider that its local network connection to the server is broken and the Real
+Server is still presumably OK. But all checkpoints from all three types must
+fail for this to occur.
+
+If the poller cannot connect to the external checkpoint but can connect to the
+edge and/or internal checkpoints the Real Server is considered down and the
+relationship-location between the Real Server and the poller is considered to
+be on the same network, either LAN or WAN.
+
+If the poller cannot connect to either the internal and/or edge checkpoints but
+can connect to any of the external checkpoints, the poller considers itself to
+be okay and the Real Server itself or its network is down. The relationship-
+location is considered to be GLOBAL.
+
+The identification of the relationship-location as LAN, WAN or GLOBAL plays no
+current role in the pool logic at this time.
