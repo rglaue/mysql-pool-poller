@@ -1,7 +1,7 @@
 package mysqlpool::failover::cache;
 
 ##
-# mysqlpool::failover::cache    ver1.00.000/REG     20051214
+# mysqlpool::failover::cache    ver1.00.000/REG     20051216
 # cache object to store data of a managed pool of
 # failover mysql servers and their state/status in
 # regards to their activity in the failover pool
@@ -20,7 +20,7 @@ BEGIN {
     $NAME       = 'mysqlpool::failover::cache';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051216;
     $DEBUG      = 0;
 
     use vars  qw(@CACHE_STORE_REFS);
@@ -254,6 +254,22 @@ sub cached_pool_config (@) {
         }
     } else {
         $self->{'_cache'}->{'_failover_pool_config'}->{$poolname} = $args{'config'};
+    }
+}
+
+sub cached_pool_status (@) {
+    my $self        = shift || return undef;
+    my %args        = @_;
+    my $poolname    = $args{'poolname'} || $self->cached_pool_name();
+    return undef unless $self->verify_element( poolname => $poolname );
+
+    if ((! exists $args{'status'}) || (! defined $args{'status'})) {
+        if (! defined $self->{'_cache'}->{'_failover_pool_status'}->{$poolname}) {
+            $self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = "OK";
+        }
+        return $self->{'_cache'}->{'_failover_pool_status'}->{$poolname};
+    } else {
+        $self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = $args{'status'};
     }
 }
 

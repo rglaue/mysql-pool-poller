@@ -1,7 +1,7 @@
 package mysqlpool::failover::logic;
 
 ##
-# mysqlpool::failover::logic    ver1.00.000/REG     20051214
+# mysqlpool::failover::logic    ver1.00.000/REG     20051216
 # Logic for failover strategy/methodology
 #   Intended to be subclassed by mysqlpool::failover
 ##
@@ -13,7 +13,7 @@ BEGIN {
     $NAME       = 'mysqlpool::failover::logic';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051216;
     $DEBUG      = 0;
 
     use vars    qw($MAX_REQUESTS $REQUEST_LEVEL $HOSTILE_TAKEOVER);
@@ -70,8 +70,8 @@ sub decipher_checkpoints (@) {
         } elsif ($status =~ /OK/) {
             my $last_req_num = $self->number_of_requests( server => $cpserver );
             my $old_message;
-            if ($last_req_num > 0) {
-                if ($message != "--") {
+            if ($last_req_num >= 1) {
+                if ( ($message ne "--") && (defined $message) ) {
                     $old_message = $message;
                 } else {
                     $old_message = $self->last_status_message(server => $cpserver);
@@ -224,14 +224,27 @@ sub decipher_failover (@) {
         ### my $thishost	= shift || $thishost || die "Polled-Host object not passed in to allow an exit from poller!";
         ### my $server	= $thishost->hostport();
 
+        # Make sure the host STATUS is not ACTIVE if the POOL STATUS is not OK (is FAIL)
+        if ($poolstatus ne "OK") {
+            if (
+                    ( (defined $thishost->{'state'})  && ($thishost->{'state'} eq "ACTIVE") )
+                ||  ( (!defined $thishost->{'state'}) && ($self->host_state( server => $server, state => "ACTIVE" )) )
+                )
+            {
+                $thishost->{'state'}    = "STANDBY";
+                $thishost->{'message'}  = join(" ", (   $thishost->{'message'},
+                                                        "(Server not allowed to be active wile POOL has $poolstatus status.)"   )
+                                                    );
+            }
+        }
         # Set the Polled host information
         if ($exitmsg =~ /WARN|FAIL/) {
             $self->number_of_requests(server => $server, requests => '++');
         } elsif ($exitmsg =~ /OK/) {
             my $last_req_num = $self->number_of_requests( server => $server );
-            my $old_message;
-            if ($last_req_num > 0) {
-                if ($thishost->{'message'} != "--") {
+            if ($last_req_num >= 1) {
+                my $old_message;
+                if ( ($thishost->{'message'} ne "--") && (defined $thishost->{'message'}) ) {
                     $old_message = $thishost->{'message'};
                 } else {
                     $old_message = $self->last_status_message(server => $server);
@@ -245,12 +258,6 @@ sub decipher_failover (@) {
             $self->failover_status(server => $server, status => $thishost->{'status'});
         }
         if (defined $thishost->{'state'}) {
-            if (($thishost->{'state'} eq "ACTIVE") && ($poolstatus ne "OK")) {
-                $thishost->{'state'}    = "STANDBY";
-                $thishost->{'message'}  = join(" ", (   $thishost->{'message'},
-                                                        "(Server not allowed to become active wile POOL has $poolstatus status.)"   )
-                                                    );
-            }
             $self->failover_state(server => $server, state => $thishost->{'state'});
         }
         if (defined $thishost->{'message'}) {
@@ -305,7 +312,7 @@ sub decipher_failover (@) {
     # (host request success/failure not known)
     # (EVALUATE: connectivity)
     # IF ANY connectivity failures with the host
-    #    IF current connect failure count is greater than or equal to $maxRequest
+    #    IF current connect failure count is greater than or equal to ($maxRequest - 1 to include this unaccounted failure request)
     #        IF state=ACTIVE
     #            IF test-server-LOWER-PRIORITY state=STANDBY
     #                then state=failed_offline
@@ -331,7 +338,7 @@ sub decipher_failover (@) {
     {
         my $status_message = ( join(", ", @{$thishost->{'errors'}->{'connect'}}) );
 
-        if ($self->number_of_requests(server => $server) >= $maxRequests)
+        if ($self->number_of_requests(server => $server) >= ($maxRequests - 1))
         {
             $thishost->{'state'}	= 'failed_offline';
             $thishost->{'status'}	= 'FAIL';
@@ -366,7 +373,7 @@ sub decipher_failover (@) {
     # (host request success/failure not known)
     # (EVALUATE: SLAVE)
     # If ANY request failures
-    #    IF this host's request failure count is greater than or equal to $maxRequests (max) times
+    #    IF this host's request failure count is greater than or equal to ($maxRequests - 1 to include this unaccounted failure request)
     #        IF state=ACTIVE
     #            then state=<current>
     #            then status=OK_WARN
@@ -388,7 +395,7 @@ sub decipher_failover (@) {
         my $status_message = ( join(", ", @{$thishost->{'errors'}->{'request'}}) );
         $thishost->{'message'} = $status_message;
 
-        if ($self->number_of_requests(server => $server) >= $maxRequests)
+        if ($self->number_of_requests(server => $server) >= ($maxRequests - 1))
         {
             if ($self->host_state( server => $server, state => "ACTIVE" )) {
                 $thishost->{'status'}	= "OK_WARN";
@@ -469,9 +476,15 @@ sub decipher_failover (@) {
     #                    CHANGE MESSAGE "Relinquishing ACTIVE state to PRIMARY."
     #                    EXIT OK
     #                IF FALSE HOSTILE-TAKEOVER
-    #                    then status=OK_WARN
-    #                    CHANGE MESSAGE "Ready to relinquish ACTIVE state to PRIMARY."
-    #                    EXIT OK
+    #                    IF test-server-REQUESTS >= 1
+    #                        then state=STANDBY
+    #                        then status=OK
+    #                        CHANGE MESSAGE "Relinquishing ACTIVE state to PRIMARY."
+    #                        EXIT OK
+    #                    IF test-server-REQUESTS = 0
+    #                        then status=OK_WARN
+    #                        CHANGE MESSAGE "Ready to relinquish ACTIVE state to PRIMARY."
+    #                        EXIT WARN
     #
     #    IF state=STANDBY
     #        IF test-server-HIGHER-PRIORITY status=OK
@@ -548,9 +561,16 @@ sub decipher_failover (@) {
                     $thishost->{'message'}	= "Relinquishing ACTIVE state to PRIMARY.";
                     return $poll_exit->('WARN');
                 } else {
-                    $thishost->{'status'}	= "OK_WARN";
-                    $thishost->{'message'}	= "Ready to relinquishing ACTIVE state to PRIMARY.";
-                    return $poll_exit->('OK');
+                    if ( $self->number_of_requests( server => $server ) >= 1 ) {
+                        $thishost->{'state'}	= "STANDBY";
+                        $thishost->{'status'}	= "OK_WARN";
+                        $thishost->{'message'}	= "Relinquishing ACTIVE state to PRIMARY.";
+                        return $poll_exit->('OK');
+                    } else {
+                        $thishost->{'status'}	= "OK_WARN";
+                        $thishost->{'message'}	= "Ready to relinquish ACTIVE state to PRIMARY.";
+                        return $poll_exit->('WARN');
+                    }
                 }
             } else {
                 $thishost->{'status'}	= "OK";

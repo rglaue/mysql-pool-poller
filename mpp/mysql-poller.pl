@@ -1,14 +1,14 @@
 #!/usr/bin/perl
 #
 ##
-# mysql-poller.pl               ver1.00.000/REG     20051214
+# mysql-poller.pl               ver1.00.000/REG     20051216
 # Script to poll a pool of servers and report their statuses.
 ##
 
 use strict;
 use Getopt::Long;
 
-# use lib '/usr/local/lib-monitor/mysqlfailoverpool';
+use lib '/usr/local/lib-monitor/mysqlfailoverpool';
 use mysqlpool::failover;
 use mysqlpool::host::mysql;
 use CGIbasic;
@@ -19,7 +19,7 @@ BEGIN {
     $NAME       = 'MySQL Poller';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051216;
     $DEBUG      = 0;
 
     use vars    qw($maxRequests $timeBetweenRequests $requestLevel);
@@ -146,10 +146,8 @@ GetOptions( \%options,
 # Some defaults;
 $options{'cache-file'} ||= $failover_cachefile;
 $options{'database'} ||= "test";
-#$options{'username'} ||= "MySQLmonitor";
-#$options{'password'} ||= "MySQLmonitor0903";
-$options{'username'} ||= "rglaue";
-$options{'password'} ||= "wof8cet6";
+$options{'username'} ||= "MySQLmonitor";
+$options{'password'} ||= "MySQLmonitor0903";
 
 
 if (
@@ -461,16 +459,21 @@ if (defined $options{'is-active'}) {
 } elsif (defined $options{'recover'}) {
     my $servername      = $options{'recover'};
     my $oldlevel        = $failover->number_of_requests(server => $servername);
+    my $oldstate        = $failover->failover_state(server => $servername);
+    my $oldstatus       = $failover->failover_status(server => $servername);
     if (! defined $oldlevel) {
         print "Server $servername requests number not set.";
         stat_exit(0);
     }
-    $failover->number_of_requests(server => $servername, requests => 0);
+    my $newlevel        = 0;
+    my $newstate        = "UNKNOWN";
+    my $newstatus       = "OK_WARN";
+    $failover->number_of_requests(server => $servername, requests => $newlevel);
     $failover->last_status_message(server => $servername, message => "Manual Recovery Initiated.");
-    $failover->failover_state(server => $servername, state => "UNKNOWN");
-    $failover->failover_status(server => $servername, status => "OK_WARN");
-    print ("OK: Cached level reset from ".$oldlevel." to ".
-            $failover->number_of_requests(server => $servername)." for ".$servername."\n");
+    $failover->failover_state(server => $servername, state => $newstate);
+    $failover->failover_status(server => $servername, status => $newstatus);
+    print ("OK: Cached level reset from ".$oldstatus."/".$oldlevel." (".$oldstate.") to "
+                                         .$newstatus."/".$newlevel." (".$newstate.") for ".$servername."\n");
     stat_exit(0);
 
 # Reinstate type=PRIMARY as state=ACTIVE, but only if current state=STANDBY
@@ -488,8 +491,8 @@ if (defined $options{'is-active'}) {
 } elsif (defined $options{'delete'}) {
     my $servername      = $options{'delete'};
     my $oldlevel        = $failover->number_of_requests(server => $servername);
-    $failover->server_delete(server => $options{'hostport'});
-    print ("OK: Cached server ".$options{'hostport'}." with ".$oldlevel." request attempts was deleted.\n");
+    $failover->server_delete(server => $servername) || die $failover->errormsg();
+    print ("OK: Cached server ".$servername." with ".$oldlevel." request attempts was deleted.\n");
     stat_exit(0);
 }
 #
@@ -677,7 +680,7 @@ sub poll_failover_pool (@) {
     my $log             = $args{'log'}          || return undef;
 
     my $pool_name       = $failover->pool_name();
-    my $poolstatus;
+    my $poolstatus      = $failover->cached_pool_status( poolname => $pool_name );
 
     my $logcheckpoint;
     foreach my $mhost (@{ $failover->primary_servers() }, @{ $failover->secondary_servers() }) {
@@ -698,6 +701,7 @@ sub poll_failover_pool (@) {
         # If the pool status is FAIL, we will leave it as FAIL.
         if ((! defined $poolstatus) || ($poolstatus ne "FAIL")) {
             $poolstatus = $pstatus->{'pool'};
+            $failover->cached_pool_status( poolname => $pool_name, status => $poolstatus );
         }
 
         if ((defined $pstatus->{'message'}) && ($pstatus->{'message'} ne "") && ($pstatus->{'message'} =~ /\w/)) {

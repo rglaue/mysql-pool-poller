@@ -1,13 +1,43 @@
 TO DO
 ------------------------------
 
-[revision 1.02.000]
+[revision 2.00.000]
+-----CONFIGURATION-----
+[ ] Build a pool configuration based on a Virtual Server defined in the
+    LVS/Piranha configuration file.
+-----POOL-GLOBAL-----
+[ ] Make Pollers aware of each other so that they can do the following:
+--- [ ] Inherit the configuration of another poller sharing in a global
+        failover or cluster. Read Poller XML config via HTTP request.
+--- [ ] Replicate pool stats from a 'master' poller to a 'slave' poller. And
+        have slave poller act as STANDBY. (Similar to a MySQL master/slave
+        replication and failover)
+--- [ ] Create internal pool of Pollers, so that there can be a more
+        intelligent redundancy using the pool::failover::logic mechanism.
+-----GUI-----
+[ ] Add more features to the Web-based GUI
+
+[revision 1.20.000]
+-----GUI-----
+[ ] Create *simple* web-based Graphical User Interface to configuring and
+    managing the Poller and cached pools.
+-----MANAGEMENT-----
+[ ] Allow more micro management of objects in the pools, like the following:
+--- [ ] Allow adding/renaming/deleting single servers from pools with ease
+--- [ ] Allow creation of new servers/pools based on the configurations of
+        existing servers/pools in the cache. (i.e. use same checkpoints..)
+
+[revision 1.10.000]
+-----GUI-----
+[ ] Add a shell to the poller for managing the cache and polling (like SQL).
+
+[revision 1.03.000]
 -----REPORTING-----
 [ ] Generate output optionally in XML upon request, using a 'xml' option flag,
     or 'format=xml'. Default output should still remain the human readable
     plain-text format that has already been used. Perhaps use MIME Types.
 
-[revision 1.01.000]
+[revision 1.02.000]
 -----POLLING-----
 [ ] Add a timing mechanism to time how long it takes to make a poll iteration
     for a pool as well as the hosts in the pool. (Record result to log)
@@ -21,6 +51,13 @@ TO DO
       /tmp/cache_file-poolname2.log
       etc...
 [ ] Add to log output the timing results of polling. (From timing mechanism)
+
+[revision 1.01.000]
+-----GENERAL-----
+[ ] Move code around so that objects only get created/invoked if the calling
+    process requires it. (i.e. Do not initialize the log if called from HTTP,
+    or when calling --list, or --cache-init (etc..) which do not use the
+    logging object)
 
 [revision 1.00.000]
 -----GENERAL-----

@@ -1,7 +1,7 @@
 package mysqlpool::failover;
 
 ##
-# mysqlpool::failover           ver1.00.000/REG     20051214
+# mysqlpool::failover           ver1.00.000/REG     20051216
 # object to manage a pool of failover mysql server and
 # their state/status in regards to their activity in
 # the failover pool
@@ -28,7 +28,7 @@ BEGIN {
     $NAME       = 'mysqlpool::failover';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051216;
     $DEBUG      = 0;
 }
 
@@ -396,8 +396,8 @@ sub get_failover_host (@) {
     my $options     = $args{'options'};
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
-    my ($host,$port)= split(':',$server);
-    my $host        = mysqlpool::host::mysql->new( host => $host, port => $port, %$options );
+    my ($serverhost,$serverport)= split(':',$server);
+    my $host        = mysqlpool::host::mysql->new( host => $serverhost, port => $serverport, %$options );
     my $cp_hosts    = {};
     my $checkpoints = $self->failover_checkpoints( poolname => $poolname, server => $server );
     foreach my $cptype (keys %{$checkpoints}) {
