@@ -109,6 +109,7 @@ sub usage (@) {
                                     #  This is used when a failover has occured, and you want
                                     #  to restore the status of the master or a slave to OK
                                     #  previously: --reset-cached-level
+    --recover=pool:poolname         # Reset current cached pool status level to OK.
     --activate-primary              # Change state of PRIMARY to ACTIVE (used after recovery to reinstate from STANDBY)
     --delete=servername:portnumber  # Removes a server from the cached response levels
                                     #  previously: --delete-cached-server
@@ -458,6 +459,15 @@ if (defined $options{'is-active'}) {
 # Reset the cached request level of a particular server
 } elsif (defined $options{'recover'}) {
     my $servername      = $options{'recover'};
+
+    if ($servername =~ /^pool\:(.*)$/) {
+        my $poolname = $1;
+        my $oldstatus = $failover->cached_pool_status( poolname => $poolname);
+        $failover->cached_pool_status( poolname => $poolname, status => "OK") || die $failover->error();
+        print ("OK: Pool status reset from ".$oldstatus." to OK\n");
+        stat_exit(0);
+    }
+
     my $oldlevel        = $failover->number_of_requests(server => $servername);
     my $oldstate        = $failover->failover_state(server => $servername);
     my $oldstatus       = $failover->failover_status(server => $servername);
