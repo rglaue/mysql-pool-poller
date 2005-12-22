@@ -166,7 +166,7 @@ sub ping () {
     if (! defined $host) {
         return fatalerror("Cannot ping. Host name not defined for this host object.");
     }
-    if ( $self->eval_exe_timeout ( sub { $self->ping($self->host, $timeout) }, ($timeout + 1) ) ) {
+    if ( $self->eval_exe_timeout ( sub { $ping->ping($self->host, $timeout) }, ($timeout + 1) ) ) {
         $ping->close();
         return 1;
     } else {
