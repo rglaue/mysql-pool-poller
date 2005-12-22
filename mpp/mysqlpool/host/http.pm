@@ -48,7 +48,7 @@ sub connect (@) {
 
     my $hostport    = $self->hostport() || return $self->fatalerror("Attributes hostname and/or portnumber are not set for this host.");
     my $sock        = 
-        eval_exe_timout ( sub { Net::HTTP->new( Host => $hostport, Timeout => $timeout ) }, ($timeout + 1) )
+        eval_exe_timoute ( sub { Net::HTTP->new( Host => $hostport, Timeout => $timeout ) }, ($timeout + 1) )
         || return $self->fatalerror( join(" ", $@) );
 
     return $sock;
