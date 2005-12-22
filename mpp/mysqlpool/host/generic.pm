@@ -1,7 +1,7 @@
 package mysqlpool::host::generic;
 
 ##
-# mysqlpool::host::generic      ver1.00.000/REG     20051214
+# mysqlpool::host::generic      ver1.00.000/REG     20051222
 # Generic host Object to manage interfacing a host, and manage its checkpoints.
 # This object is intended to be subclassed by mysqlpool::host::* modules.
 # (See mysqlpool::host::simple for an example on how to subclass this class)
@@ -20,8 +20,43 @@ BEGIN {
     $NAME       = 'mysqlpool::host::generic';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051222;
     $DEBUG      = 0;
+}
+
+#
+# Use this function for code that makes calls to some networking
+# library functions like gethostbyname() are known to have their
+# own implementations of timeouts which may conflict with your 
+# timeouts.
+# This function forces a process that makes one of these calls
+# to timeout, by force, whether they want to or not.
+# POSIX::sigaction bypasses the Perl safe signals (note that this
+# means subjecting yourself to possible memory corruption).
+#
+# Ping Example:
+# my $ping = Net::Ping->new();
+# my $ping_value = eval_exe_timeout( sub{ $ping->($host, $timeout) }, ($timeout + 1) );
+#
+# HTTP Example:
+# my $httpconn = eval_exe_timeout( sub{ Net::HTTP->new( Host => $host, Timeout => $timeout ) }, ($timeout + 1) );
+#
+sub eval_exe_timeout ($$) {
+    my $code    = shift; # a reference subroutine
+    my $timeout = shift; # Value to force a time out; suggested at {code_timeout}+1
+                         # so if you do $ping->($host, 8), this timeout might be 9
+
+    return
+        eval {
+            use POSIX qw(SIGALRM);
+            POSIX::sigaction(SIGALRM,
+                             POSIX::SigAction->new(sub { die "eval_exe_timeout: alarm at $timeout seconds." }))
+                             or die "Error setting POSIX SIGALRM handler: $!\n";
+            POSIX::alarm($timeout);
+            my $ret = &$code;
+            POSIX::alarm(0);
+            return $ret;
+        };
 }
 
 sub new {
@@ -117,6 +152,7 @@ sub ping () {
     my $self            = shift;
     my %args            = @_;
     my $port            = $args{'port'} || "object";
+    my $timeout         = $args{'timeout'} || 4;
 
     use Net::Ping;
     my $ping        = Net::Ping->new();
@@ -130,7 +166,7 @@ sub ping () {
     if (! defined $host) {
         return fatalerror("Cannot ping. Host name not defined for this host object.");
     }
-    if ($ping->ping($self->host)) {
+    if ( eval_exe_timout ( sub { $self->ping($self->host, $timeout) }, ($timeout + 1) ) ) {
         $ping->close();
         return 1;
     } else {

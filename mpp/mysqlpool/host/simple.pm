@@ -1,7 +1,7 @@
 package mysqlpool::host::simple;
 
 ##
-# mysqlpool::host::http         ver1.00.000/REG     20051214
+# mysqlpool::host::http         ver1.00.000/REG     20051222
 # Object to manage interfacing a simple host.
 ##
 
@@ -17,7 +17,7 @@ BEGIN {
     $NAME       = 'mysqlpool::host::simple';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051214;
+    $LASTMOD    = 20051222;
     $DEBUG      = 0;
 }
 
@@ -43,7 +43,12 @@ sub new {
 # connect
 sub connect (@) {
     my $self    = shift;
-    return $self->ping();
+    my %args        = @_;
+    my $timeout     = $args{'timeout'} || 4;
+    my $host        = $self->host() || return $self->fatalerror("Cannot connect because hostname not set.");
+    my $port        = $self->port();
+
+    return $self->ping(timeout => $timeout);
 }
 
 # disconnect
@@ -55,7 +60,7 @@ sub poll_connect () {
     my $self        = shift;
     my (@server_failures);
 
-    my $ping        = $self->ping();
+    my $ping        = $self->connect() || undef;
     push ( @server_failures, ("Could not reach host ".$self->hostport.".") ) unless $ping;
 
     return @server_failures;
@@ -65,7 +70,7 @@ sub poll_request () {
     my $self        = shift;
     my (@server_failures);
 
-    my $ping        = $self->ping();
+    my $ping        = $self->connect() || undef;
     push ( @server_failures, ("Could not reach host ".$self->hostport.".") ) unless $ping;
 
     return @server_failures;
