@@ -1,7 +1,7 @@
 package mysqlpool::host::http;
 
 ##
-# mysqlpool::host::http         ver1.00.000/REG     20051214
+# mysqlpool::host::http         ver1.00.000/REG     20060103
 # Object to manage interfacing an HTTP host.
 ##
 
@@ -47,11 +47,9 @@ sub connect (@) {
     my $timeout     = $args{'timeout'} || 4;
 
     my $hostport    = $self->hostport() || return $self->fatalerror("Attributes hostname and/or portnumber are not set for this host.");
-    #my $sock        = 
-    #    $self->eval_exe_timeout ( sub { Net::HTTP->new( Host => $hostport, Timeout => $timeout ) }, ($timeout + 1) )
-    #    || return $self->fatalerror( join(" ", $@) );
+    my $code        = sub { Net::HTTP->new( Host => $hostport, Timeout => $timeout ) };
     my $sock        = 
-        Net::HTTP->new( Host => $hostport, Timeout => $timeout )
+        $self->eval_exe_timeout ( $code, ($timeout + 1) )
         || return $self->fatalerror( join(" ", $@) );
 
     return $sock;

@@ -1,7 +1,7 @@
 package mysqlpool::host::generic;
 
 ##
-# mysqlpool::host::generic      ver1.00.000/REG     20051222
+# mysqlpool::host::generic      ver1.00.000/REG     20060103
 # Generic host Object to manage interfacing a host, and manage its checkpoints.
 # This object is intended to be subclassed by mysqlpool::host::* modules.
 # (See mysqlpool::host::simple for an example on how to subclass this class)
@@ -42,7 +42,8 @@ BEGIN {
 # my $httpconn = eval_exe_timeout( sub{ Net::HTTP->new( Host => $host, Timeout => $timeout ) }, ($timeout + 1) );
 #
 sub eval_exe_timeout ($$) {
-    my $code    = shift; # a reference subroutine
+    my $self    = shift;
+    my $code    = shift || return undef; # a reference subroutine
     my $timeout = shift; # Value to force a time out; suggested at {code_timeout}+1
                          # so if you do $ping->($host, 8), this timeout might be 9
 
@@ -155,7 +156,7 @@ sub ping () {
     my $timeout         = $args{'timeout'} || 4;
 
     use Net::Ping;
-    my $ping        = Net::Ping->new();
+    my $ping    = Net::Ping->new();
     if ($port eq "default") {
         $self->debugmsg("Using default server echo port for ping.");
     } elsif ($port eq "object") {
@@ -166,8 +167,9 @@ sub ping () {
     if (! defined $host) {
         return fatalerror("Cannot ping. Host name not defined for this host object.");
     }
-    # if ( $self->eval_exe_timeout( sub { $ping->ping($self->host, $timeout) }, ($timeout + 1) ) ) {
-    if ( $ping->ping($self->host, $timeout) ) {
+    my $code    = sub { $ping->ping($host, $timeout) };
+    if ( $self->eval_exe_timeout( $code, ($timeout + 1) ) ) {
+    # if ( $ping->ping($self->host, $timeout) ) {
         $ping->close();
         return 1;
     } else {
@@ -348,9 +350,9 @@ sub errormsg () {
     my $self            = shift;
     $self->debugmsg(@_);
     if (@_ >= 1) {
-        $ERRORMSG   = join("\n",@_);
+        $self->{'ERRORMSG'}   = join("\n",@_);
     } else {
-        return $ERRORMSG || return undef;
+        return $self->{'ERRORMSG'} || return undef;
     }
 }
 

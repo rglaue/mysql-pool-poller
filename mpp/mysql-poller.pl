@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 ##
-# mysql-poller.pl               ver1.00.000/REG     20051216
+# mysql-poller.pl               ver1.00.000/REG     20060103
 # Script to poll a pool of servers and report their statuses.
 ##
 
@@ -645,7 +645,8 @@ sub list_failover_pool (@) {
         print ( " "x$space_tab                      .
                 "*"                                 .
                 " "x$column{'indent_space'}         .
-                "[ ".$failover->pool_name()." ]"
+                "[ ".$failover->pool_name()." ]"    .
+                " status=".$failover->cached_pool_status()
                 );
         print "\n";
     }

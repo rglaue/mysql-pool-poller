@@ -1,7 +1,7 @@
 package mysqlpool::host::mysql;
 
 ##
-# mysqlpool::host::mysql        ver1.00.000/REG     20051214
+# mysqlpool::host::mysql        ver1.00.000/REG     20060103
 # object to manage a mysql host
 ##
 
@@ -118,14 +118,21 @@ sub connect ($$) {
     print "CONNECT: ",$self->dsn(),"\n" if $DEBUG;
     my $username	= shift || $self->username() || undef;
     my $password	= shift || $self->password() || undef;
+    my %args        = @_;
+    my $timeout     = $args{'timeout'} || 4;
+    my $dsn         = $self->dsn();
     my $dbh;
     print ("MySQL Connect called for ".$self->hostport()." host.\n") if $DEBUG;
     if (defined $username) {
-        $dbh	= DBI->connect($self->dsn(), $username, $password,
-				{'RaiseError' => 0}) || return undef;
+        my $code    = sub { DBI->connect($dsn, $username, $password, {'RaiseError' => 0}) };
+        $dbh        =
+            $self->eval_exe_timeout ( $code, ($timeout + 1) )
+            || return $self->fatalerror( DBI::errstr() );
     } else {
-        $dbh	= DBI->connect($self->dsn(),
-				{'RaiseError' => 0}) || return undef;
+        my $code    = sub { DBI->connect($dsn, {'RaiseError' => 0}) };
+        $dbh        =
+            $self->eval_exe_timeout ( $code, ($timeout + 1) )
+            || return $self->fatalerror( DBI::errstr() );
     }
     if (! defined $dbh) {
         $self->errormsg($dbh->errstr);
