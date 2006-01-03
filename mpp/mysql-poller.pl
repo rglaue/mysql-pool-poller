@@ -800,9 +800,9 @@ sub poll_failover_pool (@) {
         $active_type_msg .= (" (".$failover->host_type( server => $active_server ).")");
     }
     if ((defined $loginfo) && ($loginfo ne "") && ($loginfo =~ /\w/)) {
-        $log->log_warn(("POLL CYCLE (".$pool_name.")"),("ACTIVE: ".$active_server . $active_type_msg),$loginfo);
+        $log->log_warn(("POLL CYCLE (".$pool_name.")"),("POOL STATUS: ".$poolstatus."; ACTIVE: ".$active_server . $active_type_msg),$loginfo);
     } else {
-        $log->log_info(("POLL CYCLE (".$pool_name.")"),("ACTIVE: ".$active_server . $active_type_msg));
+        $log->log_info(("POLL CYCLE (".$pool_name.")"),("POOL STATUS: ".$poolstatus."; ACTIVE: ".$active_server . $active_type_msg));
     }
 }
 
