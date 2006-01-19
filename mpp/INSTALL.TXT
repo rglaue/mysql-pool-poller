@@ -87,18 +87,21 @@ unless it's current request level at the time of change is 0. So the Real
 Server's request level will change to 1 when becoming ACTIVE, but on the next
 POLL CYCLE it will return to 0 (assuming everything is okay with it).
 	A level of 1 is intended to be an informative level, and the minimum
-recommend number of levels is 2 being: 0 = OK, 1 = INFO, 2 = FAIL. If you want
-Real Server to fail faster, you should increase the time between polling. See,
-"POLLING INTERVAL" below.
-	It is recommended that at least two levels exist because sometimes there
-may be a one-time quark in the connection from the poller to the mysql server
-which will be correct before a subsequent poll. As well there is often the
-STANDBY server getting behind in its replication from the master which is also
-corrected before a subsequest poll. Both times you want to give the STANDBY time
-to recover instead of failing. Remember, the logic will not allow a STANDBY to
-become ACTIVE unless its its request level is 0. And if there are any lower
-priority STANDBY servers, they must wait for the higher priority STANDBY server
-to FAIL ($maxRequests) before being allowed to take over as ACTIVE.
+recommend number of levels is 3 being: 0 = OK, 1 = INFO, 2 = FAIL. If you want
+the Real Server to fail faster, you should increase the time between polling.
+See, "POLLING INTERVAL" below.
+	It is recommended that at least three levels exist because sometimes
+there may be a one-time quark in the connection from the poller to the mysql
+server which will be corrected before a subsequent poll (Example: packets
+slowed down due to a flood of traffic to the server the poller resides on which
+may cause the poller to think the MySQL Server cannot be reached if its request
+times out). As well there is often the STANDBY server getting behind in its
+replication from the master which is also corrected before a subsequest poll.
+Both times you want to give the STANDBY time to recover instead of failing. 
+Remember, the logic will not allow a STANDBY to become ACTIVE unless its
+request level is 0. And if there are any lower priority STANDBY servers, they
+must wait for the higher priority STANDBY server to FAIL ($maxRequests) before
+being allowed to take over as ACTIVE.
 
 If you are using a monitoring application like Nagios, nagios will maintain the
 status and how it reports the status based on the string given it. So you
@@ -107,12 +110,14 @@ be interpreted by a third-party application.
 
 The $maxRequests variable is what the pool logic uses to determine if a server
 should go into a failure state. The default is 5. So if the poller fails to
-connect to the server 5 times, after the fifth time the server will be put into
-a state of FAIL. This variable only determines after how many failed pollings
-the MySQL Real Server should be put into FAIL state.
+connect to the server 5 times, immediately after the fifth failure time the
+MySQL Real Server will be put into a state of FAIL. This variable only 
+determines after how many failed pollings the MySQL Real Server should be put 
+into FAIL state.
 
-If you believe 5 requests is too many, you can change the number of levels to 3
-with the following configuration:
+If you believe 5 requests is too many, you can change the number of requests
+($maxRequests) to 3, making the number of request levels 4 with the following
+configuration:
   $requestLevels = {
 	0 => 'OK',
 	1 => 'OK INFO',
@@ -124,14 +129,17 @@ with the following configuration:
 POLLING INTERVAL
 
 The time between polling is determined by the mechanism that invokes the
-poller. The recommended polling interval is between 3 to 5 minutes. If you
+poller. The recommended polling interval is between 1 to 5 minutes. If you
 have more that 12 pools with many Real Servers in each, all with checkpoints,
 it is recommended that the pools be split up into several cache files and
 invoked in seperate processes.
 	Having each pool polled in seperate processes, yet still maintained in
 one cache file is not highly recommended. The reason is that each process will
 have to wait to read and/or save the cache in a competition with the other
-polling processes that use the same cache file.
+polling processes that use the same cache file. This will end up slowing down
+the polling process. A lock is maintained on the cache file in an attempt to
+protect from two processes writing to it at the same time, but it is not
+recommended that this be allowed in a production environment.
 
 The easiest way to find out the best polling interval time for your set up is
 to configure all the pools in one cache file, then run a pool cycle using the
@@ -148,6 +156,98 @@ mysql-poller.pl application every 3 minutes, you would add the following cron
 entry:
   */3 * * * * /path/to/install/directory/mysql-poller.pl --poll-cached-pools
 This cron entry assumes you are using the default cache file.
+
+
+Suggested Math for Polling Interval
+
+Here is some simple math to help compute your polling interval. If you believe
+the suggested polling interval is too long, you should decrease the number of
+pools you are polling for your poll cycle, splitting them up into separate
+processes that are invoked by cron.
+
+Foreach Pool in your polling cycle, add up the following:
+  1) Number of MySQL Real Server
+  2) Number of Check points for each MySQL Real Server
+A) Take the resulting number and multiply it by 7 (5 is the default forced
+time-out value in seconds, which the connection attempt will be forced to close
+if there is no response from the mysql or checkpoint server. It will take about
+6 Real Seconds to have a forced timeout. 7 seconds is for good safety).
+B) The resulting number should be divided by 60, and rounded up to the next
+whole number. This is the suggested polling cycle interval in minutes.
+
+Example A:
+  Pool #1 - "production_mysql"
+    MySQL Primary - mysql1.domain.com
+    MySQL Secondary - mysql2.domain.com
+  Pool #2 - "testing_mysql"
+    MySQL Primary - mysql3.domain.com
+    MySQL Secondary - mysql4.domain.com
+  - math:
+    4 MySQL Real Servers
+    0 Checkpoints
+    4 x 7 = 28
+    (28 / 60) then round up to next whole = 1
+  - suggestion:
+    1 minute minimum polling cycle suggested
+
+Example B:
+  Pool #1 - "production_mysql_china-global-location"
+    MySQL Primary - mysql1.domain.com.cn
+      Checkpoint internal - server1.domain.com.cn
+      Checkpoint edge - router1.domain.com.cn
+      Checkpoint external - www.chinatoday.com.cn
+      Checkpoint external - www.google.com.cn
+    MySQL Secondary - mysql2.domain.com.cn
+      Checkpoint internal - server2.domain.com.cn
+      Checkpoint edge - router2.domain.com.cn
+      Checkpoint external - www.chinatoday.com.cn
+      Checkpoint external - www.google.com.cn
+  Pool #2 - "testing_mysql_china-global-location"
+    MySQL Primary - mysql3.domain.com.cn
+      Checkpoint internal - server1.domain.com.cn
+      Checkpoint edge - router1.domain.com.cn
+      Checkpoint external - www.chinatoday.com.cn
+      Checkpoint external - www.google.com.cn
+    MySQL Primary - mysql4.domain.com.cn
+      Checkpoint internal - server2.domain.com.cn
+      Checkpoint edge - router2.domain.com.cn
+      Checkpoint external - www.chinatoday.com.cn
+      Checkpoint external - www.google.com.cn
+  - math:
+    4 MySQL Real Servers
+    16 Checkpoint Servers
+    20 x 7 = 140
+    ((140 / 60) = 2.3 ) then round up to next whole = 3
+  - suggestion:
+    3 minute minimum polling cycle suggested
+  - alternate suggestion
+    A) Split the production and testing pools into two seperate processes
+    invoked by cron (or your alternate preferred invoker). This will allow you
+    to have a 2 minute polling cycle for each process.
+    B) If you need the MySQL Real Servers to fail faster, decrease the number
+    of configured request levels. The default $maxRequests is 5, and you could
+    decrese it to the minimum recommendation of 3, allowing for 4 request
+    levels (0-3). This would decrese time-to-failure from 15 minutes (5 levels
+    times the 3 minute polling interval) to 9 minutes (3 levels times the 3
+    minute polling interval).
+    C) You can do both A and B alternate suggestions to decrease the
+    time-to-failure to 6 minutes (3 levels times the 2 minute polling cycle).
+    D) If you need to get the time-to-failure below 6 minutes in this last
+    configuration, you could try setting the $maxRequests to 2, creating 3
+    requests levels (0-2). But this is not recommended, as some
+    self-recovering issues may find there way to the second request before
+    recovering.
+    E) As a very last resort, if you need to get the time-to-failure even
+    lower, your only other option is to modify the code and change the timeout
+    value. Currently timeout is set to 5 seconds. If you decrease timeout to 4
+    seconds, you could decrease your polling cycle to 1 minute using alternate
+    suggestion C, resulting in a time-to-failure of 3 miniutes.
+    This is not a supported alternate suggestion, although it is possible.
+
+  * Running the polling processes so that they overlap (in that the next
+    process begins before the previous process has ended) is not recommended,
+    as each polling process relies on the previous process's polling results
+    which need to be written to the cache file for the next process.
 
 
 CHECKPOINT THEOLOGY
@@ -169,18 +269,24 @@ There are three checkpoint types:
 If a Real Server is seen as down by a poller, and that poller cannot connect to
 the Real Server's external, edge, and internal checkpoints, the poller will
 consider that its local network connection to the server is broken and the Real
-Server is still presumably OK. But all checkpoints from all three types must
-fail for this to occur.
+Server is still presumably OK but will begin to escalate the Real Server to
+FAIL status anyway. At the same time, the Pools being polled immediately go
+into a status of FAIL. No Real Servers in a Pool with status FAIL are allowed
+to be ACTIVE. All checkpoints from all three types must fail for this to occur.
 
 If the poller cannot connect to the external checkpoint but can connect to the
-edge and/or internal checkpoints the Real Server is considered down and the
+edge and/or internal checkpoints the Polled Pools are considered FAIL and the
 relationship-location between the Real Server and the poller is considered to
 be on the same network, either LAN or WAN.
 
 If the poller cannot connect to either the internal and/or edge checkpoints but
 can connect to any of the external checkpoints, the poller considers itself to
-be okay and the Real Server itself or its network is down. The relationship-
+be okay and the Real Server itself is considered FAIL. The relationship-
 location is considered to be GLOBAL.
 
 The identification of the relationship-location as LAN, WAN or GLOBAL plays no
 current role in the pool logic at this time.
+
+Any Server or Pool that escalates to FAIL must be manually recovered for their
+status to change from FAILED to STANDBY. Manual recovery should occur after
+fixing whatever caused the Real Server's status to be escalated to FAIL.

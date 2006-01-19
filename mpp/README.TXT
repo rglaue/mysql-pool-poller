@@ -9,11 +9,12 @@ This application and libraries are used to manage the individual statuses and
 group states of mysql servers participating in a pool.
 
 As of version 1.0, a failover pool is the only pool type that is configurable.
-In a failover pool, one or more real servers participate as a group to keep a
-MySQL Virtual Server up 24x7. With only one real server allowed to respond for
-the MySQL Virtual Server at a single time. The MySQL Virtual Server's actual
-connectivity is managed by a third-party redundancy mechanism. This application
-is used to determine which server is the ACTIVE server at any given time.
+In a failover pool, one or more Real Servers participate as a group to keep a
+Virtual Server up 365x24x7. With only one real server allowed to respond for
+the Virtual Server at a single time. The Virtual Server's actual connectivity
+is managed by a third-party redundancy mechanism. This MySQL Pool & Poller
+application is used to determine which server is the ACTIVE server at any
+given time.
 
 This application is used to determine which MySQL Real Server participating in a
 pool is the current ACTIVE server responding to requests for the MySQL Virtual
@@ -22,7 +23,8 @@ Server.
 The redundancy mechanism simply makes a request asking if a particular server it
 manages is supposed to be active or not. Supposedly, a server that is in a state
 of ACTIVE will be the one responding for the Virtual Server while the remaining
-MySQL servers in the pool will remain in a deactivated state.
+MySQL servers in the pool will remain in a deactivated state, although
+physically UP and running.
 
 
 THIRD-PARTY REDUNDANCY MECHANISMS
@@ -35,6 +37,15 @@ The following load balancers have been tested with this application:
         The Linux Virtual Server Project
         http://www.linuxvirtualserver.org/
 
+The following load balancers will be tested with this application in the future:
+    F5 Big IP
+        http://www.f5networks.com
+
+The following global load balancers are currently being tested for a future
+Global-aware (multi-geographical-poller) version of this application:
+    F5 3DNS
+        http://www.f5networks.com
+
 
 THIRD-PARTY MONITORING MECHANISMS
 
@@ -46,14 +57,14 @@ The following monitoring applications are expected to work with this application
 
 REQUIRED PERL MODULES
 
-  MODULE	MIN VERSION
-  -----------	-----------
-  CGIbasic	0.010
-  Config_info	1.00803
-  LogBasic	0.00.003
-  Storable	PERL >= 5.8
-  Net::HTTP	PERL >= 5.8
-  Net::Ping	PERL >= 5.8
-  IO::FILE	PERL >= 5.8
-  DBD::MySQL	2.9006
-  DBI		1.46
+  MODULE	MIN VERSION	AVAILABLE
+  -----------	-----------	--------------
+  CGIbasic	0.010		MPP Bundled
+  Config_info	1.00803		MPP Bundled
+  LogBasic	0.00.003	MPP Bundled
+  Storable	PERL >= 5.8	PERL Bundled
+  Net::HTTP	PERL >= 5.8	PERL Bundled
+  Net::Ping	PERL >= 5.8	PERL Bundled
+  IO::FILE	PERL >= 5.8	PERL Bundled
+  DBD::MySQL	2.9006		CPAN
+  DBI		1.46		CPAN
