@@ -447,11 +447,11 @@ if (defined $options{'is-active'}) {
         }
     if (defined $status_message)
         {
-        print ($requestLevel->{$reqlevel} ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
+        print ($server_status ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
         }
       else
         {
-        print ($requestLevel->{$reqlevel} ."\n");
+        print ($server_status ."\n");
         }
     # stat_exit(0);
     exit 0;
