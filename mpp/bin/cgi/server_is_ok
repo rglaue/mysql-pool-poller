@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+my $poller_dir="/usr/local/mpp";
+my $poller_exe="mysql-poller.pl";
+my $cache_file="/usr/local/mpp/cache/mpp-3dns";
+
+my ($mysql_server,$mysql_port,$mysql_pool,$mysql_name);
+
+use lib '/usr/local/mpp/lib';
+use mpp_server_config;
+my $mservers = mpp_server_config::config();
+my $pinput  = $ENV{'PATH_INFO'};
+   $pinput  =~ s/\///g;
+my ($pserver,$pport) = split(':',$pinput);
+
+if (exists $mservers->{'pooled'}->{$pserver}->{$pport}) {
+    $mysql_server       = $pserver;
+    $mysql_port         = $pport;
+    $mysql_pool         = $mservers->{'pooled'}->{$mysql_server}->{$pport}->{'pool'};
+    $mysql_name         = $mservers->{'pooled'}->{$mysql_server}->{$pport}->{'name'};
+}
+
+if ((! defined $mysql_pool) || (! defined $mysql_port)) {
+    print "Content-type: text/plain\n\n";
+    print "ERROR: MySQL server ($pinput) to check not identified!\n";
+    exit;
+}
+
+# print "$poller_dir/$poller_exe --test-http=/3dns/$mysql_pool/?report=$mysql_server:$mysql_port\n";
+my $out = `$poller_dir/$poller_exe --test-http=/3dns/$mysql_pool/?report=$mysql_server:$mysql_port`;
+chomp $out;
+$out .= "-CHECK";
+print $out;
+print "\n\n";
+print "   pool: ",$mysql_pool,"\n";
+print " server: ",$mysql_server,":",$mysql_port,"\n";
+print "   name: ",$mysql_name,"\n";
+

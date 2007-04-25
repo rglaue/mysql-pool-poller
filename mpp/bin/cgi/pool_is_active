@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+
+my $poller_dir="/usr/local/mpp";
+my $poller_exe="mysql-poller.pl";
+my $cache_file="/usr/local/mpp/cache/mpp-3dns";
+my $location="cu";
+
+my ($mysql_server,$mysql_port,$mysql_name,$mysql_pool,$mysql_vhost);
+
+use lib '/usr/local/mpp/lib';
+use mpp_server_config;
+my $mservers = mpp_server_config::config();
+my $ghost = $ENV{'PATH_INFO'};
+   $ghost =~ s/\///g;
+my $gpool = $mservers->{'global'}->{$ghost}->{'pool'} || undef;
+
+if (defined $gpool) {
+    SERVER: foreach my $mserver (keys %{$mservers->{'pooled'}}) {
+        PORT: foreach my $mport (keys %{$mservers->{'pooled'}->{$mserver}}) {
+            next unless $mservers->{'pooled'}->{$mserver}->{$mport}->{'pool'} eq $gpool;
+            next unless $mservers->{'pooled'}->{$mserver}->{$mport}->{'ploc'} eq $location;
+            next unless $mservers->{'pooled'}->{$mserver}->{$mport}->{'type'} eq "real";
+            next unless defined $mservers->{'pooled'}->{$mserver}->{$mport}->{'vhost'};
+            $mysql_server	= $mserver;
+            $mysql_port		= $mport;
+            $mysql_name		= $mservers->{'pooled'}->{$mserver}->{$mport}->{'name'};
+            $mysql_pool		= $mservers->{'pooled'}->{$mserver}->{$mport}->{'pool'};
+            $mysql_vhost	= $mservers->{'pooled'}->{$mserver}->{$mport}->{'vhost'};
+            last SERVER;
+            # This assumes there is only ONE real server!!
+        }
+    }
+}
+
+if ((! defined $mysql_pool) || (! defined $mysql_port)) {
+    print "Content-type: text/plain\n\n";
+    print "ERROR: MySQL pool ($ghost) to check not identified!\n";
+    exit;
+}
+
+# print "$poller_dir/$poller_exe --test-http=/3dns/$mysql_pool/?is-active=$mysql_server:$mysql_port\n";
+my $out = `$poller_dir/$poller_exe --test-http=/3dns/$mysql_pool/?is-active=$mysql_server:$mysql_port`;
+chomp $out;
+$out .= "-CHECK";
+print $out;
+print "\n\n";
+print "  ghost: ",$ghost,"\n";
+print "  vhost: ",$mysql_vhost,"\n";
+print "   pool: ",$mysql_pool,"\n";
+print " server: ",$mysql_server,":",$mysql_port,"\n";
+print "   name: ",$mysql_name,"\n";
+

@@ -1,6 +1,12 @@
 package mysqlpool::failover;
 
 ##
+# mysqlpool::failover           ver1.00.001/REG     20060302
+# added function parseFailoverpoolConfigString
+# added function parseCheckpointConfigString
+# added function joinFailoverpoolConfigHash
+# added function joinCheckpointConfigHash
+##
 # mysqlpool::failover           ver1.00.000/REG     20051216
 # object to manage a pool of failover mysql server and
 # their state/status in regards to their activity in
@@ -27,8 +33,8 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'mysqlpool::failover';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.000';
-    $LASTMOD    = 20051216;
+    $VERSION    = '1.00.001';
+    $LASTMOD    = 20060302;
     $DEBUG      = 0;
 }
 
@@ -110,6 +116,30 @@ sub _parseParameterString (@) {
     return \%failoverpool;
 }
 
+sub parseFailoverpoolConfigString {
+    my $self        = shift;
+    return $self->_parseParameterString(@_);
+}
+sub joinFailoverpoolConfigHash {
+    my $self        = shift;
+    my $fohash      = shift;
+    my $fostring    = "";
+
+    if (! defined $fohash->{'_name'}) {
+        return $self->fatalerror("Failover pool name not defined for failover pool config hash.");
+    } else {
+        $fostring   .= ("name:".$fohash->{'_name'});
+    }
+    foreach my $foserver ($fohash{'_types'}{'primary'}) {
+        $fostring   .= (";primary:".$foserver);
+    }
+    foreach my $foserver ($fohash{'_types'}{'secondary'}) {
+        $fostring   .= (";secondary:".$foserver);
+    }
+
+    return $fostring;
+}
+
 sub _parseCheckpointString (@) {
     my $self        = shift;
     my $string      = shift;
@@ -128,6 +158,34 @@ sub _parseCheckpointString (@) {
     }
 
     return \%checkpoints;
+}
+
+# parseCheckpointConfigString
+# $checkpoint_config_string = "server:servername:port;internal:http:server:port;edge:http:server:port;external:http:server:port"
+# \%checkpoint_config_hash = failover->parseCheckpointConfigString($checkpoint_config_string)
+sub parseCheckpointConfigString {
+    my $self        = shift;
+    return $self->_parseCheckpointString(@_);
+}
+# joinCheckpointConfigHash
+# %checkpoint_config_hash = ( server => server:port, checkpoints => { internal => , edge => , external => } )
+# $checkpoint_config_string = failover->joinCheckpointConfigHash(\%checkpoint_config_hash)
+sub joinCheckpointConfigHash {
+    my $self        = shift;
+    my $cphash      = shift;
+    my $cpstring;
+
+    if (! defined $cphash->{'server'}) {
+        return $self->fatalerror("Server not defined for checkpoint config hash");
+    } else {
+        $cpstring   .= ("server:".$cphash->{'server'});
+    }
+    foreach my $cptype (keys %{$cphash->{'cpservers'}}) {
+        foreach my $cpserver (@{$cphash->{'cpservers'}{$cptype}}) {
+            $cpstring   .= (";".$cptype.":".$cpserver);
+        }
+    }
+    return $cpstring;
 }
 
 # Assign unknown state to newly defined servers in failover pool

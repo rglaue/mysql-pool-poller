@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+unless (@ARGV >= 2) {
+    die "$0 [HOST] [PORT]\n";
+}
+
+use lib '/usr/local/mpp/lib';
+use mpp_server_config;
+my $mservers = mpp_server_config::config();
+
+my $HOST = shift @ARGV;
+if ($HOST !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+    if ($HOST =~ /^::ffff:/) {
+        $HOST =~ s/^::ffff://;
+    } else {
+        print "ERROR: Server $HOST not in expected IPv4 format.\n";
+        exit 1;
+    }
+}
+my $PORT = shift @ARGV;
+my $POOL = $mservers->{'pooled'}->{$HOST}->{$PORT}->{'pool'};
+
+my $POLLER_DIR="/usr/local/mpp";
+my $POLLER_EXE="mysql-poller.pl";
+my $CACHE_FILE="/usr/local/mpp/cache/mpp-3dns";
+
+# print "$POLLER_DIR/$POLLER_EXE --cache-file=\"$CACHE_FILE\" --failoverpool=\"name:$POOL\" --report=$HOST:$PORT\n";
+my $TEST = `$POLLER_DIR/$POLLER_EXE --cache-file="$CACHE_FILE" --failoverpool="name:$POOL" --report=$HOST:$PORT`;
+
+if ( $TEST =~ /^OK.*/ ) {
+    print "up\n";
+} elsif ( $TEST =~ /^FAIL.*/ ) {
+    print "down\n";
+} else {
+    if ($TEST !~ /\w/) {
+        print "ERROR: Server $HOST not monitored.\n";
+    } else {
+        print "ERROR: $TEST\n";
+    }
+}

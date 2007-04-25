@@ -1,6 +1,9 @@
 package mysqlpool::failover::cache;
 
 ##
+# mysqlpool::failover::cache    ver1.00.001/REG     20060302
+# added function cache->failover_pool_delete($poolname)
+##
 # mysqlpool::failover::cache    ver1.00.000/REG     20051216
 # cache object to store data of a managed pool of
 # failover mysql servers and their state/status in
@@ -19,8 +22,8 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'mysqlpool::failover::cache';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.000';
-    $LASTMOD    = 20051216;
+    $VERSION    = '1.00.001';
+    $LASTMOD    = 20060302;
     $DEBUG      = 0;
 
     use vars  qw(@CACHE_STORE_REFS);
@@ -696,6 +699,21 @@ sub server_delete ($) {
     } else {
         return 1;
     }
+}
+
+sub failover_pool_delete {
+    my $self        = shift || return undef;
+    my %args        = @_;
+    my $poolname    = $args{'poolname'} || $self->cached_pool_name();
+
+    foreach my $pooled_server ($failover->pooled_servers(poolname => $poolname)) {
+        $self->server_delete(poolname => $poolname, server => $pooled_server)
+            || $self->errormsg("While deleting pool $poolname, could not deleted pooled server $pooled_server.");
+        delete $self->{'_server_checkpoint_config'}->{$pooled_server};
+    }
+    delete $self->{'_failover_pool_config'}->{$poolname};
+    delete $self->{'_failover_pool_status'}->{$poolname};
+    delete $self->{'_failover_pool'}->{$poolname};
 }
 
 sub cache_dump () {
