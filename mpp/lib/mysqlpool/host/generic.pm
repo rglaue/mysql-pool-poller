@@ -1,10 +1,6 @@
 package mysqlpool::host::generic;
 
 ##
-# mysqlpool::host::generic      ver1.00.001/REG     20070307
-# Fixed issue in ping which a firewalled host does not allow a tcp ping.
-# Fixed by making "syn" the default protocol used for ping.
-##
 # mysqlpool::host::generic      ver1.00.000/REG     20060103
 # Generic host Object to manage interfacing a host, and manage its checkpoints.
 # This object is intended to be subclassed by mysqlpool::host::* modules.
@@ -23,8 +19,8 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'mysqlpool::host::generic';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.001';
-    $LASTMOD    = 20070307;
+    $VERSION    = '1.00.000';
+    $LASTMOD    = 20051222;
     $DEBUG      = 0;
 }
 
@@ -158,7 +154,7 @@ sub ping () {
     my %args            = @_;
     my $port            = $args{'port'} || "object";
     my $timeout         = $args{'timeout'} || 4;
-    my $proto		= $args{'proto'} || "syn"; # other usable options: tcp, udp
+    my $proto		= $args{'proto'} || "syn";
 
     use Net::Ping;
     my $ping    = Net::Ping->new($proto);

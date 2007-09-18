@@ -130,10 +130,10 @@ sub joinFailoverpoolConfigHash {
     } else {
         $fostring   .= ("name:".$fohash->{'_name'});
     }
-    foreach my $foserver ($fohash{'_types'}{'primary'}) {
+    foreach my $foserver ($fohash->{'_types'}{'primary'}) {
         $fostring   .= (";primary:".$foserver);
     }
-    foreach my $foserver ($fohash{'_types'}{'secondary'}) {
+    foreach my $foserver ($fohash->{'_types'}{'secondary'}) {
         $fostring   .= (";secondary:".$foserver);
     }
 
@@ -259,7 +259,7 @@ sub config ($) {
 
     $self->cached_pool_name($self->{'cfg'}->{'_name'});
     $self->cached_pool_config(config => $args{'string'})
-                || return $self->fatalerror("Could not set pool configuration.",$self->errormsg);
+                || return $self->fatalerror("Could not set pool configuration(".$args{'string'}.").",$self->errormsg);
     $self->init_new_servers();  # Add new servers into the pool cache
 
     return $self->{'cfg'};

@@ -2,20 +2,20 @@
 
 my $wdr   = "/usr/local/mpp";
 my $exe   = "mysql-poller.pl";
-my $cache = "/usr/local/mpp/cache/mpp-3dns";
+my $cache = "/usr/local/mpp/cache/mpp-cache";
 
 unless (@ARGV >= 2) {
     die "$0 [location-code] [global-host] [global-host] [etc..]\n";
 }
 
-my $location = shift @ARGV; # pass in "ma" or "cu"
-  die "Pass in 'ma' or 'cu' as your setup location.\n" if $location ne "ma" and $location ne "cu";
+my $location = shift @ARGV; # pass in "site-A" or "site-B"
+  die "Pass in 'site-A' or 'site-B' as your setup location.\n" if $location ne "site-A" and $location ne "site-B";
 # my $globalhost = shift @ARGV;
 my @globalhosts = @ARGV;
 
 my %checkpoints = (
-  'ma' => 'internal:simple:lutetium.web.ma.cait.org:default;edge:simple:firewall1.net.ma.cait.org:default;external:http:www.google.com:default;external:http:www.ebay.com:default',
-  'cu' => 'internal:simple:hafnium.web.cu.cait.org:default;edge:simple:firewall1.net.cu.cait.org:default;external:http:www.google.com:default;external:http:www.yahoo.com:default'
+  'site-A' => 'internal:simple:web-1.site-A.e.org:default;edge:simple:firewall.site-A.e.org:default;external:http:www.google.com:default;external:http:www.ebay.com:default',
+  'site-B' => 'internal:simple:web-2.site-B.e.org:default;edge:simple:firewall.site-B.e.org:default;external:http:www.google.com:default;external:http:www.yahoo.com:default'
 );
 
 use lib '/usr/local/mpp/lib';

@@ -22,7 +22,7 @@ my $POOL = $mservers->{'pooled'}->{$HOST}->{$PORT}->{'pool'};
 
 my $POLLER_DIR="/usr/local/mpp";
 my $POLLER_EXE="mysql-poller.pl";
-my $CACHE_FILE="/tmp/cache_mpp-3dns";
+my $CACHE_FILE="/tmp/cache_mpp-cache";
 
 # print "$POLLER_DIR/$POLLER_EXE --cache-file=\"$CACHE_FILE\" --failoverpool=\"name:$POOL\" --report=$HOST:$PORT\n";
 my $TEST = `$POLLER_DIR/$POLLER_EXE --cache-file="$CACHE_FILE" --failoverpool="name:$POOL" --report=$HOST:$PORT`;

@@ -8,7 +8,7 @@
 use strict;
 use Getopt::Long;
 
-use lib '/usr/local/lib-monitor/mysqlfailoverpool';
+use lib '/usr/local/mpp/lib';
 use mysqlpool::failover;
 use mysqlpool::host::mysql;
 use CGIbasic;
@@ -44,15 +44,14 @@ BEGIN {
     $cachefile_prefix       = "cache_mysql_";
     $cachefile_cacheid      = "_monitor";
     $failover_cachefile     = ( $cachefile_dir ."/".  $cachefile_prefix."failover".$cachefile_cacheid );
+    $failover_cachefile     = "/usr/local/mpp/cache/mpp-cache"; # Override what MPP chooses as the cache file
 
     use vars    qw(%HTTP_CONFIG %options $failover $log);
     %HTTP_CONFIG    = (
                         cache   =>  {
-                                        default     => "poolcache1",
-                                        poolcache1  => $failover_cachefile,
-                                        local       => ($failover_cachefile."-local"),
-                                        global      => ($failover_cachefile."-global"),
-                                        test        => ($failover_cachefile."-test")
+                                        default		=> "mpp-cache",
+                                        poolcache1	=> $failover_cachefile,
+					'mpp-cache'	=> "/usr/local/mpp/cache/mpp-cache"
                                     },
                         options =>  [ qw (
                                         list
@@ -147,8 +146,8 @@ GetOptions( \%options,
 # Some defaults;
 $options{'cache-file'} ||= $failover_cachefile;
 $options{'database'} ||= "test";
-$options{'username'} ||= "MySQLmonitor";
-$options{'password'} ||= "MySQLmonitor0903";
+$options{'username'} ||= "default_mysql_username";
+$options{'password'} ||= "default_mysql_password";
 
 
 if (
@@ -294,9 +293,9 @@ ERROR_EOF
 #
 if ($options{'cache-init'} == 1) {
     $failover   = init_failover_config($failover,$options{'failoverpool'},$options{'checkpoint'});
-    foreach my $server ($failover->pooled_servers()) {
-        $failover->server_delete(server => $server) || die ("Error: ".$failover->errormsg()."\n");
-    }
+#    foreach my $server ($failover->pooled_servers()) {
+#        $failover->server_delete(server => $server) || die ("Error: ".$failover->errormsg()."\n");
+#    }
     print "Initializing cache.\n";
     $failover   = init_failover_config($failover,$options{'failoverpool'},$options{'checkpoint'});
     stat_exit(0);
@@ -447,11 +446,12 @@ if (defined $options{'is-active'}) {
         }
     if (defined $status_message)
         {
+        # print ($requestLevel->{$reqlevel} ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
         print ($server_status ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
         }
       else
         {
-        print ($server_status ."\n");
+        print ($requestLevel->{$reqlevel} ."\n");
         }
     # stat_exit(0);
     exit 0;
@@ -463,7 +463,10 @@ if (defined $options{'is-active'}) {
     if ($servername =~ /^pool\:(.*)$/) {
         my $poolname = $1;
         my $oldstatus = $failover->cached_pool_status( poolname => $poolname);
-        $failover->cached_pool_status( poolname => $poolname, status => "OK") || die $failover->error();
+        #my $r = $failover->cached_pool_status( poolname => $poolname, status => "OK") || die $failover->errormsg();
+        #warn "failover->cached_pool_status returned $r\n";
+        #($failover->cached_pool_status( poolname => $poolname, status => "OK") && (warn "failover->cached_pool_status returned OK")) || die $failover->errormsg();
+        $failover->cached_pool_status( poolname => $poolname, status => "OK"); # || die $failover->error();
         print ("OK: Pool status reset from ".$oldstatus." to OK\n");
         stat_exit(0);
     }

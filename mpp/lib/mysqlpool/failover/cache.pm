@@ -32,7 +32,7 @@ BEGIN {
 END {
     while (my $objs = shift @CACHE_STORE_REFS)
     {
-        next unless $objs->cache_file();
+        next unless $objs->cache_file() && $objs->cache_updated();
         warn "Storing cache for object\n" if $DEBUG;
         $objs->cache_store() || warn(("Error: Could not save cache to file: ".$objs->cache_file().".\n"));
         $objs = undef;
@@ -54,6 +54,14 @@ sub new {
     return $self;
 }
 
+sub cache_updated {
+    my $self    = shift || return undef;
+    my $val     = shift;
+    if ((! $val >= 1) || (! $val == 0)) {
+        return $self->{'_flag_cache_updated'};
+    }
+    $self->{'_flag_cache_updated'} = $val;
+}
 
 # Cache object routines
 
@@ -76,6 +84,7 @@ sub cache_init {
                 return undef;
             }
         }
+        $self->cache_updated(0);
         push(@CACHE_STORE_REFS, $self);
     }
 }
@@ -171,7 +180,7 @@ sub polled_server_delete ($) {
     my $server  = $args{'server'} || undef;
     return undef unless $self->verify_element( server => $server );
 
-    delete $self->{'_cache'}->{'_server_poll'}->{$server};
+    (delete $self->{'_cache'}->{'_server_poll'}->{$server}) && $self->cache_updated(1);
 }
 
 sub last_status_message ($) {
@@ -185,11 +194,11 @@ sub last_status_message ($) {
     }
     my $message = $args{'message'};
     if ((! defined $message) || ($message eq "") || ($message eq "\n")) {
-        $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'} = "";
+        ($self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'} = "") && $self->cache_updated(1);
     } elsif ($message eq '--') {
-        delete $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'};
+        (delete $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'}) && $self->cache_updated(1);
     } else {
-        $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'} = $message;
+        ($self->{'_cache'}->{'_server_poll'}->{$server}->{'last_status_message'} = $message) && $self->cache_updated(1);
     }
 }
 
@@ -207,18 +216,18 @@ sub number_of_requests ($) {
     }
     if ($reqnum eq '++') {
         if ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} >= 0) {
-            $self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'}++;
+            ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'}++) && $self->cache_updated(1);
         } else {
-            $self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = 1;
+            ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = 1) && $self->cache_updated(1);
         }
     } elsif ($reqnum eq '--') {
         if ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} >= 1) {
-            $self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'}--;
+            ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'}--) && $self->cache_updated(1);
         } else {
-            $self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = 0;
+            ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = 0) && $self->cache_updated(1);
         }
     } else {
-        $self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = $reqnum;
+        ($self->{'_cache'}->{'_server_poll'}->{$server}->{'number_of_requests'} = $reqnum) && $self->cache_updated(1);
     }
 }
 
@@ -229,7 +238,7 @@ sub last_request_time ($) {
     return undef unless $self->verify_element( server => $server );
 
     my $reqtime = $args{'time'} || return $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_request_time'};
-    $self->{'_cache'}->{'_server_poll'}->{$server}->{'last_request_time'} = $reqtime;
+    ($self->{'_cache'}->{'_server_poll'}->{$server}->{'last_request_time'} = $reqtime) && $self->cache_updated(1);
 }
 
 # Pool of FAILOVER servers
@@ -256,7 +265,7 @@ sub cached_pool_config (@) {
             return $self->{'_cache'}->{'_failover_pool_config'}->{$poolname};
         }
     } else {
-        $self->{'_cache'}->{'_failover_pool_config'}->{$poolname} = $args{'config'};
+        ($self->{'_cache'}->{'_failover_pool_config'}->{$poolname} = $args{'config'}) && $self->cache_updated(1);
     }
 }
 
@@ -268,11 +277,11 @@ sub cached_pool_status (@) {
 
     if ((! exists $args{'status'}) || (! defined $args{'status'})) {
         if (! defined $self->{'_cache'}->{'_failover_pool_status'}->{$poolname}) {
-            $self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = "OK";
+            ($self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = "OK") && $self->cache_updated(1);
         }
         return $self->{'_cache'}->{'_failover_pool_status'}->{$poolname};
     } else {
-        $self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = $args{'status'};
+        ($self->{'_cache'}->{'_failover_pool_status'}->{$poolname} = $args{'status'}) && $self->cache_updated(1);
     }
 }
 
@@ -289,7 +298,7 @@ sub cached_checkpoint_config (@) {
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
     my $checkpointconfig    = $args{'config'} || return $self->{'_cache'}->{'_server_checkpoint_config'}->{$poolname}->{$server};
-    $self->{'_cache'}->{'_server_checkpoint_config'}->{$poolname}->{$server} = $checkpointconfig;
+    ($self->{'_cache'}->{'_server_checkpoint_config'}->{$poolname}->{$server} = $checkpointconfig) && $self->cache_updated(1);
 }
 
 # Return a list of servers in the named failover pool
@@ -331,7 +340,7 @@ sub pooled_server_delete (@) {
     my $server      = $args{'server'};
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
-    delete $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server};
+    (delete $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}) && $self->cache_updated(1);
 }
 
 
@@ -345,9 +354,9 @@ sub failover_type (@) {
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
     if ((exists $args{'type'}) && (defined $args{'type'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_type'} = uc $args{'type'};
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_type'} = uc $args{'type'}) && $self->cache_updated(1);
     } elsif ((exists $args{'type'}) && (! defined $args{'type'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_type'} = undef;
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_type'} = undef) && $self->cache_updated(1);
     } else {
         return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_type'};
     }
@@ -363,9 +372,9 @@ sub failover_state (@) {
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
     if ((exists $args{'state'}) && (defined $args{'state'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_state'} = uc $args{'state'};
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_state'} = uc $args{'state'}) && $self->cache_updated(1);
     } elsif ((exists $args{'state'}) && (! defined $args{'state'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_state'} = undef;
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_state'} = undef) && $self->cache_updated(1);
     } else {
         return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_state'};
     }
@@ -381,9 +390,9 @@ sub failover_status (@) {
     return undef unless $self->verify_element( poolname => $poolname, server => $server );
 
     if ((exists $args{'status'}) && (defined $args{'status'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_status'} = uc $args{'status'};
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_status'} = uc $args{'status'}) && $self->cache_updated(1);
     } elsif ((exists $args{'status'}) && (! defined $args{'status'})) {
-        return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_status'} = undef;
+        return ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_status'} = undef) && $self->cache_updated(1);
     } else {
         return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'failover_status'};
     }
@@ -447,9 +456,9 @@ sub create_failover_server (@) {
         return 1;
     }
     if (! exists $self->{'_cache'}->{'_failover_pool'}->{$poolname}) {
-        $self->{'_cache'}->{'_failover_pool'}->{$poolname} = {};
+        ($self->{'_cache'}->{'_failover_pool'}->{$poolname} = {}) && $self->cache_updated(1);
     }
-    $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server} = {};
+    ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server} = {}) && $self->cache_updated(1);
 }
 
 # Error Message from failover error
@@ -462,9 +471,9 @@ sub failover_error_message (@) {
 
     my $message = $args{'message'} || return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'error_message'};
     if ($message eq '--') {
-        delete $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'error_message'};
+        (delete $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'error_message'}) && $self->cache_updated(1);
     } else {
-        $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'error_message'} = $message;
+        ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'error_message'} = $message) && $self->cache_updated(1);
     }
 }
 
@@ -489,7 +498,7 @@ sub failover_checkpoint (@) {
     }
 
     if (defined $cpstatus) {
-        $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver} = $cpstatus;
+        ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver} = $cpstatus) && $self->cache_updated(1);
     } else {
         return $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver};
     }
@@ -508,12 +517,12 @@ sub create_failover_server_checkpoint (@) {
         return $self->fatalerror("Parameter checkpoint->server must be defined as 'proto:server:port'.");
     }
     if (! exists $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}) {
-        $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype} = {};
+        ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype} = {}) && $self->cache_updated(1);
     }
     if (exists $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver}) {
         return $self->fatalerror("Checkpoint creation failed, $cptype -> $cpserver already exists for $server in pool $poolname.");
     } else {
-        $self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver} = $cpstatus;
+        ($self->{'_cache'}->{'_failover_pool'}->{$poolname}->{$server}->{'checkpoints'}->{$cptype}->{$cpserver} = $cpstatus) && $self->cache_updated(1);
     }
 }
 
@@ -706,7 +715,7 @@ sub failover_pool_delete {
     my %args        = @_;
     my $poolname    = $args{'poolname'} || $self->cached_pool_name();
 
-    foreach my $pooled_server ($failover->pooled_servers(poolname => $poolname)) {
+    foreach my $pooled_server ($self->pooled_servers(poolname => $poolname)) {
         $self->server_delete(poolname => $poolname, server => $pooled_server)
             || $self->errormsg("While deleting pool $poolname, could not deleted pooled server $pooled_server.");
         delete $self->{'_server_checkpoint_config'}->{$pooled_server};

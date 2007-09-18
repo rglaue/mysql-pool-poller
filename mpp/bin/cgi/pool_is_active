@@ -2,7 +2,7 @@
 
 my $poller_dir="/usr/local/mpp";
 my $poller_exe="mysql-poller.pl";
-my $cache_file="/usr/local/mpp/cache/mpp-3dns";
+my $cache_file="/usr/local/mpp/cache/mpp-cache";
 my $location="cu";
 
 my ($mysql_server,$mysql_port,$mysql_name,$mysql_pool,$mysql_vhost);
