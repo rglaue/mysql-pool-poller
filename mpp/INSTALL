@@ -4,12 +4,12 @@ INSTALLATION
 APPLICATION LOCATION
 
 This application is expecting to be installed in the following path:
-  /usr/local/lib-monitor/mysqlfailoverpool
+  /usr/local/mpp
 
 However, this is very easily changed by modifying one line in the
 mysql-poller.pl file near the top.
 Change the following line to the correct path to the installation directory:
-  use lib '/usr/local/lib-monitor/mysqlfailoverpool';
+  use lib '/usr/local/mpp';
 
 So feel free to install anywhere you believe is best.
 
@@ -20,7 +20,7 @@ CACHE AND LOG FILES LOCATION
 
 By default, cache files and activity logs are created and maintained in the
 following directory:
-  /tmp
+  /usr/local/mpp/cache
 
 You can change the location to whereever you wish by doing one of two things.
 Change the path of the default cache file in the mysql-poller.pl file by simply
@@ -220,7 +220,14 @@ Example B:
     ((140 / 60) = 2.3 ) then round up to next whole = 3
   - suggestion:
     3 minute minimum polling cycle suggested
-  - alternate suggestion
+  - alternate math without 1 extra safety second (6 sec not 7 sec):
+    4 MySQL Real Servers
+    16 Checkpoint Servers
+    20 x 6 = 120
+    ((120 / 60) = 2 ) which is a whole = 2
+  - alternate suggestion without safety second
+    2 minute minimum polling cycle suggested
+  - more alternate suggestions
     A) Split the production and testing pools into two seperate processes
     invoked by cron (or your alternate preferred invoker). This will allow you
     to have a 2 minute polling cycle for each process.
@@ -243,6 +250,17 @@ Example B:
     seconds, you could decrease your polling cycle to 1 minute using alternate
     suggestion C, resulting in a time-to-failure of 3 miniutes.
     This is not a supported alternate suggestion, although it is possible.
+
+    Z) In our real world deployment, we found that we can run up to 8 pools
+    each having 4 checkpoints, within a 1 minute poll interval. When failures
+    begin to occur, the downfall of MPP has been the processing power of the
+    computer it runs on. And total failure of a site begins the failover
+    process for all pools, which when that occurs, it no longer matters when
+    poll intervals are overlapping since we have cache file locking anyway.
+    Our real world results show that usually one or two real servers in a
+    pool(s) may fail at one time, thus causing MPP to check the checkpoints.
+    This seems to be handled well enough under a 1 minute poll interval.
+    Anyone attempting to perform this should undergo their own testing.
 
   * Running the polling processes so that they overlap (in that the next
     process begins before the previous process has ended) is not recommended,

@@ -113,7 +113,7 @@ sub usage (@) {
     --delete=servername:portnumber  # Removes a server from the cached response levels
                                     #  previously: --delete-cached-server
     --test-http=URI                 # Used if you wish to test the HTTP response from the command line
-                                    #  Ex: --test-http=/cache=default/pool=pool1/report=server1:3306
+                                    #  Ex: --test-http=/cache_id/pool_name/report=server1.e.org:3306
     --help                          # This help message
 
     # For Pirahna/LVS or Nagios Monitoring
