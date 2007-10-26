@@ -19,24 +19,22 @@ BEGIN {
     $NAME       = 'MySQL Poller';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051216;
+    $LASTMOD    = 20071026;
     $DEBUG      = 0;
 
     use vars    qw($maxRequests $timeBetweenRequests $requestLevel);
-    $maxRequests            = 5;
+    $maxRequests            = 4;
     $timeBetweenRequests    = 30; # time in seconds # Not used!
     # INFO: not important, but and could be left unnoted
     # WARN: somewhat important, perhaps notify, and might be noted
-    # SOFT: important, notify, something is wrong and should be looked at
-    # HARD: very important, notify, do something or there failure procedure will be taken
+    # CRITICAL: important, notify, do something or there failure procedure will be taken
     # FAIL: failure has occurred, failure procedure is to commence 
     $requestLevel	=	{
 				0 => 'OK',
 				1 => 'OK INFO',
 				2 => 'OK WARN',
-				3 => 'OK SOFT',
-				4 => 'OK HARD',
-				5 => 'FAIL CRITICAL',
+				3 => 'OK CRITICAL',
+				4 => 'FAIL CRITICAL',
 				};
 
     use vars	qw($cachefile_dir $cachefile_prefix $cachefile_cacheid $failover_cachefile);

@@ -13,14 +13,14 @@ BEGIN {
     $NAME       = 'mysqlpool::failover::logic';
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
-    $LASTMOD    = 20051216;
+    $LASTMOD    = 20061026;
     $DEBUG      = 0;
 
     use vars    qw($MAX_REQUESTS $REQUEST_LEVEL $HOSTILE_TAKEOVER);
-    $MAX_REQUESTS       = 5;
+    $MAX_REQUESTS       = 4;
     $REQUEST_LEVEL      =
         {   0 => 'OK',      1 => 'OK INFO', 2 => 'OK WARN',
-            3 => 'OK SOFT', 4 => 'OK HARD', 5 => 'FAIL CRITICAL'    };
+            3 => 'OK CRITICAL', 4 => 'FAIL CRITICAL'    };
     $HOSTILE_TAKEOVER   = 0;
 }
 

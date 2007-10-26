@@ -59,16 +59,15 @@ These variables are located in the BEGIN function of the mysql-poller.pl file,
 which is near the top of the file.
 
 You can set the levels to however many you feel is necessary and what the name
-of the level is. By default there are 6 levels, and the maximum allowed requests
-before failure is 5.
+of the level is. By default there are 5 levels, and the maximum allowed requests
+before failure is 4.
 
-The current 6 levels are as follows:
+The current 5 levels are as follows:
 	0 => 'OK'
 	1 => 'OK INFO'
 	2 => 'OK WARN'
-	3 => 'OK SOFT'
-	4 => 'OK HARD'
-	5 => 'FAIL CRITICAL'
+	3 => 'OK CRITICAL'
+	4 => 'FAIL CRITICAL'
 
 Again, you may change the name of each level to whatever you wish. The name of
 the level is what is reported when a call is made to report on a particular
@@ -109,19 +108,19 @@ should want to configure the name of each level based on how that level should
 be interpreted by a third-party application.
 
 The $maxRequests variable is what the pool logic uses to determine if a server
-should go into a failure state. The default is 5. So if the poller fails to
-connect to the server 5 times, immediately after the fifth failure time the
+should go into a failure state. The default is 4. So if the poller fails to
+connect to the server 4 times, immediately after the fourth failure time the
 MySQL Real Server will be put into a state of FAIL. This variable only 
 determines after how many failed pollings the MySQL Real Server should be put 
 into FAIL state.
 
-If you believe 5 requests is too many, you can change the number of requests
+If you believe 4 requests is too many, you can change the number of requests
 ($maxRequests) to 3, making the number of request levels 4 with the following
 configuration:
   $requestLevels = {
 	0 => 'OK',
 	1 => 'OK INFO',
-	2 => 'OK SOFT',
+	2 => 'OK CRITICAL',
 	3 => 'FAIL CRITICAL' }
   $maxRequests = 3;
 
