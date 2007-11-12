@@ -266,6 +266,7 @@ sub cached_pool_config (@) {
         }
     } else {
         ($self->{'_cache'}->{'_failover_pool_config'}->{$poolname} = $args{'config'}) && $self->cache_updated(1);
+        return 1;
     }
 }
 

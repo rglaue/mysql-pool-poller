@@ -254,12 +254,12 @@ sub init_failover_config ($$$) {
     my $chkpnt_cfg  = shift || undef;
 
     if ( split(';',$config_str) > 1 ) {
-        $failover->config($config_str);
+        $failover->config($config_str) || die ("Failure configuring pool: ".$failover->errormsg().".");
     } else {
         if ($config_str =~ /name:([^\:\;]*)/i) {
             my $poolname    = $1;
             my $config      = $failover->cached_pool_config(poolname => $poolname);
-            $failover->config($config);
+            $failover->config($config) || die ("Failure configuring pool: ".$failover->errormsg().".");
         } else {
             my $mesg =<<ERROR_EOF;
         ERROR: You need to choose a failover pool to use. Available from the cache:
@@ -290,7 +290,7 @@ ERROR_EOF
 # Deal with the cache init and polling calls
 #
 if ($options{'cache-init'} == 1) {
-    $failover   = init_failover_config($failover,$options{'failoverpool'},$options{'checkpoint'});
+#    $failover   = init_failover_config($failover,$options{'failoverpool'},$options{'checkpoint'});
 #    foreach my $server ($failover->pooled_servers()) {
 #        $failover->server_delete(server => $server) || die ("Error: ".$failover->errormsg()."\n");
 #    }
