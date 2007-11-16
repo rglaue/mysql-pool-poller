@@ -89,7 +89,7 @@ $options{'host'} ||= "0.0.0.0";
 $options{'port'} ||= "3306";
 $options{'database'} ||= "test";
 $options{'username'} ||= "default_mysql_username";
-# $options{'password'} ||= "default_mysql_password";
+#$options{'password'} ||= "default_mysql_password";
 
 if (! defined $options{'cache-file'}) {
     die usage("Cache file not provided!");
@@ -153,7 +153,7 @@ if ((defined $options{'initialize-all'}) || (defined $options{'set-all'})) {
 
             print ("Initializing ".$server ." [".$host_type."] ". $host_state .": (". $host_status ."/". $request_num .") ". $status_message."\n") if $DEBUG;
             my $r = $proxyhost->initialize_node($server,"TYPE",$host_type);
-            die "Cannot initialize node $server: $r." unless $r;
+            die ("Cannot initialize node $server: $r; ",$proxyhost->errormsg()) unless $r;
             if (($DEBUG) || ((exists $options{'verbode'}) && ($options{'verbode'}))) {
                 foreach my $k (keys %$r) {
                     print ("initialize node $server TYPE $host_type: ".$r->{$k}."\n");
@@ -204,6 +204,7 @@ if ((defined $options{'initialize-all'}) || (defined $options{'set-all'})) {
     $sh->{'node'} = $server;
     print ("Setting node $server") if $DEBUG;
     my $r = $proxyhost->set_node(%$sh);
+    die ("Cannot initialize node $server: $r; ",$proxyhost->errormsg()) unless $r;
     if (($DEBUG) || ((exists $options{'verbose'}) && ($options{'verbose'}))) {
         foreach my $s (keys %$r) {
             my $sv = $r->{$s};

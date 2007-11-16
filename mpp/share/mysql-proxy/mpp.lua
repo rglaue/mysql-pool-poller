@@ -63,7 +63,7 @@ if not proxy.global.config.mpp then
         proxy_cache = true,
         rr_val = 0,
         nodes = {},
-        debug = 0,
+        debug = 1,
         levels = {
             type = {
                 PRIMARY = 0,
@@ -196,7 +196,7 @@ function read_query( packet )
 
         local command_error = 0
         local command_message = {}
-        if (string.upper(com_type) == 'MPP') then
+        if com_type ~= nil and string.upper(com_type) == 'MPP' then
             if mpp.debug >= 1 then
                 print("We got a MPP query: " .. command)
             end
@@ -448,6 +448,14 @@ function read_query( packet )
             print(string.format("NOTICE: servernode %s",servernode))
 
             if servernode == 0 then
+                if query ~= nil and string.upper(query) == "SET AUTOCOMMIT=0" then
+                    -- deal with DBD::mysql always setting autocommit on every connection
+                    if mpp.debug >= 1 then
+                        print("Ignoring SET AUTOCOMMIT=0 - mysql bug #32464");
+                    end
+                    proxy.response.type = proxy.MYSQLD_PACKET_OK
+                    return proxy.PROXY_SEND_RESULT
+                end
                 out_msg = "MPP error: Cannot find a valid server node for connections!"
                 if mpp.debug >= 1 then
                     io.write("MPP returning error: %s", out_msg)

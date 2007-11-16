@@ -126,10 +126,14 @@ sub connect ($$) {
     my $dbh;
     print ("MySQL Connect called for ".$self->hostport()." host.\n") if $DEBUG;
     if (defined $username) {
-        my $code    = sub { DBI->connect($dsn, $username, $password, {'RaiseError' => 0}) };
+        my $code    = sub { DBI->connect($dsn, $username, $password, {'RaiseError' => 0, AutoCommit => 0}) };
         $dbh        =
             $self->eval_exe_timeout ( $code, ($timeout + 1) )
             || return $self->fatalerror( DBI::errstr() );
+        # an attempt to deal with mysql bug #32464 for DBD::mysql
+        # if ((DBI::errstr()) && (DBI::errstr() !~ /AutoCommit failed/)) {
+        #     return $self->fatalerror( DBI::errstr() );
+        # }
     } else {
         my $code    = sub { DBI->connect($dsn, {'RaiseError' => 0}) };
         $dbh        =
@@ -137,7 +141,7 @@ sub connect ($$) {
             || return $self->fatalerror( DBI::errstr() );
     }
     if (! defined $dbh) {
-        $self->errormsg($dbh->errstr);
+        $self->errormsg(DBI::errstr());
         return undef;
     }
     return $self->dbhandle($dbh);
