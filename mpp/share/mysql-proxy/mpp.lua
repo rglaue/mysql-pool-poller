@@ -1,6 +1,7 @@
 --[[
     Copyright 2007 Russell E Glaue
-
+    Center for the Application of Information Technologies
+    Western Illinois University
 --]]
 
 function print_any_table( tt )
@@ -28,17 +29,6 @@ function print_any_table( tt )
             io.write(tt .. "\n")
         end
     end
-
-    --[[
-    print (" [proxy.backends]")
-    for i = 1, #proxy.backends do
-        table_print(proxy.backends[i])
-    end
-    print (" [proxy.connection]")
-    for i = 1, #proxy.connection do
-        table_print(proxy.connection[i])
-    end
-    --]]
 end
 
 --[[
@@ -73,7 +63,7 @@ if not proxy.global.config.mpp then
         proxy_cache = true,
         rr_val = 0,
         nodes = {},
-        debug = 1,
+        debug = 0,
         levels = {
             type = {
                 PRIMARY = 0,
@@ -107,6 +97,88 @@ if not proxy.global.config.mpp then
         ROupstatus = 1,
         lbmethod = "rr"
     }
+end
+
+function load_balance(TYPE)
+    -- TYPE is RW or RO for load balacing options
+    -- load balance negotiation by TYPE is not supported yet
+    local mpp = proxy.global.config.mpp
+
+    local rr_node = proxy.global.config.mpp.rr_val
+    if mpp.debug >= 1 then
+        print("> proxy.global.config.mpp.rr_val = " .. proxy.global.config.mpp.rr_val)
+    end
+
+    -- implement round robin of RW servers (currently 1 server for failover strategy)
+    -- it is kind of funny to implement round robin when you know there is only one server
+    -- however, we want this implemented so it can be used for multiple RO standby servers
+    local gotserver = 0
+    local rr_node_count = 0
+    rr_node = rr_node + 1
+    if (rr_node > (#proxy.backends)) then
+        rr_node = 1
+    end
+    if mpp.debug >= 1 then
+        print ("** entering round robin load balance negotiation **")
+    end
+    while not ((gotserver == 1) or (rr_node_count == (#proxy.backends))) do
+        if mpp.debug >= 1 then
+            print ("iteration: " .. rr_node_count)
+        end
+        if (mpp.nodes[proxy.backends[rr_node].address] == nil) then
+            gotserver = 1 -- not really, we are giving out node 0 until we are initialized
+            rr_node = 0
+            if mpp.debug >= 1 then
+                print("MPP table not yet initialized, allowing first connections to proxy backend 0.")
+            end
+            break
+        end
+        if mpp.debug >= 1 then
+            local rr_node_address = proxy.backends[rr_node].address
+            print("## evaluating rr_node as rr_val = " .. rr_node)
+            print(string.format("## node state requirement: %s", mpp.levels.state["ACTIVE"]))
+            print(string.format("## node %s state: %s", rr_node_address, mpp.nodes[rr_node_address].state))
+            print(string.format("## node status requirement: %s", mpp.RWupstatus))
+            print(string.format("## node %s status: %s", rr_node_address, mpp.nodes[rr_node_address].status))
+        end
+        if ((proxy.backends[rr_node])
+            and (mpp.nodes[proxy.backends[rr_node].address].state == mpp.levels.state["ACTIVE"])
+            and (mpp.nodes[proxy.backends[rr_node].address].status <= mpp.RWupstatus))
+        then
+            if mpp.debug >= 1 then
+                print("found ACTIVE UP backend at rr_node: " .. rr_node)
+            end
+            gotserver = 1
+            break
+        elseif proxy.backends[(rr_node + 1)] then
+            rr_node = rr_node + 1
+            if mpp.debug >= 1 then
+                print("incrementing rr_node: " .. rr_node)
+            end
+            gotserver = 0
+        else
+            rr_node = 1
+            if mpp.debug >= 1 then
+                print("resetting rr_node: " .. rr_node)
+            end
+            gotserver = 0
+        end
+        rr_node_count = rr_node_count + 1
+    end
+    if mpp.debug >= 1 then
+        print ("** exiting round robin load balance negotiation **")
+    end
+
+    if gotserver == 1 then
+        if mpp.debug >= 1 then
+            print ("Setting rr_node: " .. rr_node)
+        end
+        proxy.global.config.mpp.rr_val = rr_node
+    else
+        rr_node = 0
+    end
+
+    return rr_node
 end
 
 
@@ -370,6 +442,25 @@ function read_query( packet )
             if mpp.debug >= 1 then
                 print("We got a normal query: " .. query)
             end
+
+            local servernode = load_balance("RW")
+
+            print(string.format("NOTICE: servernode %s",servernode))
+
+            if servernode == 0 then
+                out_msg = "MPP error: Cannot find a valid server node for connections!"
+                if mpp.debug >= 1 then
+                    io.write("MPP returning error: %s", out_msg)
+                end
+                proxy.response = {
+                    type = proxy.MYSQLD_PACKET_ERR,
+                    errmsg = out_msg
+                }
+                return proxy.PROXY_SEND_RESULT
+            end
+
+            return proxy.PROXY_SEND_QUERY
+
         end
     end
 end
@@ -404,89 +495,24 @@ function connect_server()
         end
     end
 
-    local rr_node = proxy.global.config.mpp.rr_val
-    if mpp.debug >= 1 then
-        print("> proxy.global.config.mpp.rr_val = " .. proxy.global.config.mpp.rr_val)
-    end
+    -- -----------------------------------------
+    --
+    -- load balancing in the read_query function
+    --
+    --
 
-    -- implement round robin of RW servers (currently 1 server for failover strategy)
-    -- it is kind of funny to implement round robin when you know there is only one server
-    -- however, we want this implemented so it can be used for multiple RO standby servers
-    local gotserver = 0
-    local rr_node_count = 0
-    rr_node = rr_node + 1
-    if (rr_node > (#proxy.backends)) then
-        rr_node = 1
-    end
-    if mpp.debug >= 1 then
-        print ("** entering round robin load balance negotiation **")
-    end
-    while not ((gotserver == 1) or (rr_node_count == (#proxy.backends))) do
-        if mpp.debug >= 1 then
-            print ("iteration: " .. rr_node_count)
-        end
-        if (mpp.nodes[proxy.backends[rr_node].address] == nil) then
-            gotserver = 1 -- not really, we are giving out node 0 until we are initialized
-            rr_node = 0
-            if mpp.debug >= 1 then
-                print("MPP table not yet initialized, allowing first connections to proxy backend 0.")
-            end
-            break
-        end
-        if mpp.debug >= 1 then
-            local rr_node_address = proxy.backends[rr_node].address
-            print("## evaluating rr_node as rr_val = " .. rr_node)
-            print(string.format("## node state requirement: %s", mpp.levels.state["ACTIVE"]))
-            print(string.format("## node %s state: %s", rr_node_address, mpp.nodes[rr_node_address].state))
-            print(string.format("## node status requirement: %s", mpp.RWupstatus))
-            print(string.format("## node %s status: %s", rr_node_address, mpp.nodes[rr_node_address].status))
-        end
-        if ((proxy.backends[rr_node])
-            and (mpp.nodes[proxy.backends[rr_node].address].state == mpp.levels.state["ACTIVE"])
-            and (mpp.nodes[proxy.backends[rr_node].address].status <= mpp.RWupstatus))
-        then
-            gotserver = 1
-            if mpp.debug >= 1 then
-                print("found ACTIVE UP backend at rr_node: " .. rr_node)
-            end
-        elseif proxy.backends[(rr_node + 1)] then
-            rr_node = rr_node + 1
-            if mpp.debug >= 1 then
-                print("incrementing rr_node: " .. rr_node)
-            end
-        else
-            rr_node = 1
-            if mpp.debug >= 1 then
-                print("resetting rr_node: " .. rr_node)
-            end
-        end
-        rr_node_count = rr_node_count + 1
-    end
-    if mpp.debug >= 1 then
-        print ("** exiting round robin load balance negotiation **")
-    end
+    local servernode = load_balance("RW")
 
-    if gotserver == 0 then
-        proxy.response.type = proxy.MYSQLD_PACKET_ERR
-        out_msg = "MPP error: Cannot find a valid server node for connections!"
-        proxy.response.errmsg = out_msg
+    if servernode == 0 then
+        proxy.connection.backend_ndx = 0
         if mpp.debug >= 1 then
-            io.write("MPP returning error: %s", out_msg)
+            print("  [" .. 0 .. "] letting proxy choose a connection")
         end
-        return proxy.PROXY_SEND_RESULT
-    end
-
-    if mpp.debug >= 1 then
-        print ("Setting rr_node: " .. rr_node)
-    end
-    proxy.global.config.mpp.rr_val = rr_node
-    proxy.connection.backend_ndx = rr_node
-
-    if proxy.connection.backend_ndx == 0 then
+    else
+        proxy.connection.backend_ndx = servernode
         if mpp.debug >= 1 then
-            print("  [" .. rr_node .. "] taking master as default")
+            print("  [" .. servernode .. "] choosing an initial connection")
         end
-        proxy.connection.backend_ndx = rr_node
     end
 
     -- open a new connection 
