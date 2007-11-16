@@ -89,7 +89,7 @@ $options{'host'} ||= "0.0.0.0";
 $options{'port'} ||= "3306";
 $options{'database'} ||= "test";
 $options{'username'} ||= "default_mysql_username";
-$options{'password'} ||= "default_mysql_password";
+# $options{'password'} ||= "default_mysql_password";
 
 if (! defined $options{'cache-file'}) {
     die usage("Cache file not provided!");
