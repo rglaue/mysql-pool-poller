@@ -343,7 +343,8 @@ sub poll_checkpoints () {
 
 sub fatalerror ($) {
     my $self            = shift;
-    $self->errormsg(@_);
+    my @msg = ($self->errormsg(),@_);
+    $self->errormsg(@msg);
     return undef;
 }
 
