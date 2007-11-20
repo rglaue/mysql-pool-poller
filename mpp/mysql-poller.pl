@@ -437,6 +437,7 @@ if (defined $options{'is-active'}) {
     my $status_message	= $failover->last_status_message(server => $servername);
     my $server_status   = $failover->host_status(server => $servername);
     my $server_state    = $failover->host_state(server => $servername);
+    my $server_type     = $failover->host_type(server => $servername);
 
     if ($reqlevel >= $maxRequests)
         {
@@ -445,11 +446,11 @@ if (defined $options{'is-active'}) {
     if (defined $status_message)
         {
         # print ($requestLevel->{$reqlevel} ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
-        print ($server_status ."/". $request_num .": (". $server_status ."/". $server_state .") ". $status_message."\n");
+        print ($server_status ."/". $server_state ." (".$server_type.") : (". $server_status ."/". $request_num .") ". $status_message."\n");
         }
       else
         {
-        print ($requestLevel->{$reqlevel} ."\n");
+        print ($requestLevel->{$reqlevel} ."/". $server_state ." (".$server_type.")\n");
         }
     # stat_exit(0);
     exit 0;
