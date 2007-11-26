@@ -183,11 +183,11 @@ sub send_mpp_command ($) {
     my $self	= shift || return undef;
     my $command	= shift || return undef;
 
-    my $mql	= ("MPP ".$command);
+    my $mql	= ("MPP ".$command); # hard coded beginning of mql string
 
     my $dbh     = $self->dbhandle() || return $self->fatalerror("Could not connect to mysql; ".$self->dsn()."\n");
     my $sth	= $dbh->prepare($mql);
-    $sth->execute();
+    $sth->execute() || return $self->fatalerror("Query Error ".$DBI::errstr."\n");
     my $result	= $sth->fetchrow_hashref() || undef;
     $sth->finish();
     # $dbh->disconnect();
@@ -204,11 +204,11 @@ sub send_mpp_command_multi ($) {
     my $self	= shift || return undef;
     my $command	= shift || return undef;
 
-    my $mql	= ("MPP ".$command);
+    my $mql     = ("MPP ".$command);
 
     my $dbh     = $self->dbhandle() || return $self->fatalerror("Could not connect to mysql; ".$self->dsn()."\n");
-    my $sth	= $dbh->prepare($mql);
-    $sth->execute();
+    my $sth     = $dbh->prepare($mql);
+    $sth->execute() || return $self->fatalerror("Query Error ".$DBI::errstr."\n");
     my @results;
     while (my $result	= $sth->fetchrow_hashref()) {
         push(@results,$result);
@@ -233,7 +233,6 @@ sub initialize_node (@) {
     my $node	= shift || return undef;
     my $element	= shift || return undef;
     my $value	= shift || return undef;
-    my $dbh     = $self->dbhandle() || return $self->fatalerror("Could not connect to mysql; ".$self->dsn()."\n");
     my $cmd     = ("INITIALIZE $node $element $value");
 
     return $self->send_mpp_command($cmd);
@@ -247,7 +246,6 @@ sub set_node (@) {
     my $state   = $args{'state'}   || undef;
     my $status  = $args{'status'}  || undef;
     my $weight  = $args{'weight'}  || undef;
-    my $dbh	= $self->dbhandle() || return $self->fatalerror("Could not connect to mysql; ".$self->dsn()."\n");
     unless ((defined $type) || (defined $state) || (defined $status) || (defined $weight)) {
         return $self->fatalerror("Error setting node, type, state or status not defined.");
     }
@@ -267,11 +265,6 @@ sub set_node (@) {
     if (defined $weight) {
         $ret->{'weight'} = $self->send_mpp_command("SET $node WEIGHT $weight") || return $self->fatalerror("Could not set $node weight to $weight");
     }
-    if (keys %$ret <= 1) {
-        foreach my $k (keys %$ret) {
-            return $ret->{$k};
-        }
-    }
     return $ret;
 }
 
@@ -280,7 +273,8 @@ sub set_node_type ($$) {
     my $node	= shift || return undef;
     my $value	= shift || return undef;
 
-    return $self->set_node(node => $node, type => $value);
+    my $ret     = $self->set_node(node => $node, type => $value) || return undef;
+    return $ret->{'type'};
 }
 
 sub set_node_state ($$) {
@@ -288,7 +282,8 @@ sub set_node_state ($$) {
     my $node	= shift || return undef;
     my $value	= shift || return undef;
 
-    return $self->set_node(node => $node, state => $value);
+    my $ret     = $self->set_node(node => $node, state => $value) || return undef;
+    return $ret->{'state'};
 }
 
 sub set_node_status ($$) {
@@ -296,7 +291,8 @@ sub set_node_status ($$) {
     my $node	= shift || return undef;
     my $value	= shift || return undef;
 
-    return $self->set_node(node => $node, status => $value);
+    my $ret     = $self->set_node(node => $node, status => $value) || return undef;
+    return $ret->{'status'};
 }
 
 sub set_node_weight ($$) {
@@ -304,7 +300,8 @@ sub set_node_weight ($$) {
     my $node	= shift || return undef;
     my $value	= shift || return undef;
 
-    return $self->set_node(node => $node, weight => $value);
+    my $ret     = $self->set_node(node => $node, weight => $value) || return undef;
+    return $ret->{'weight'};
 }
 
 sub show ($) {

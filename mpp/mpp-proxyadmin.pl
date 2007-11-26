@@ -21,7 +21,7 @@ BEGIN {
     $AUTHOR     = 'rglaue@cait.org';
     $VERSION    = '1.00.000';
     $LASTMOD    = 20071111;
-    $DEBUG      = 0;
+    $DEBUG      = 1;
 
     use vars    qw(%options $failover_cachefile $log $failover $proxyhost);
 }
@@ -81,6 +81,7 @@ GetOptions( \%options,
         "host=s",       "port=s",
         "database=s",   "username=s",   "password=s",
         "initialize-all", "set-all", "show-nodes",
+        "set=s", "type=s", "state=s", "status=s", "weight=s",
         "verbose", "help"
         );
 # Some defaults;
@@ -202,9 +203,8 @@ if ((defined $options{'initialize-all'}) || (defined $options{'set-all'})) {
     }
 
     $sh->{'node'} = $server;
-    print ("Setting node $server") if $DEBUG;
-    my $r = $proxyhost->set_node(%$sh);
-    die ("Cannot initialize node $server: $r; ",$proxyhost->errormsg()) unless $r;
+    print ("Setting node $server...\n") if $DEBUG;
+    my $r = $proxyhost->set_node(%$sh) || die ("Cannot initialize node $server; ",$proxyhost->errormsg());
     if (($DEBUG) || ((exists $options{'verbose'}) && ($options{'verbose'}))) {
         foreach my $s (keys %$r) {
             my $sv = $r->{$s};

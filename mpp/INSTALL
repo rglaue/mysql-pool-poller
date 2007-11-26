@@ -150,11 +150,29 @@ the polling process takes longer to complete.
 	Note that when a Real Server fails, all checkpoints configured for the
 real server (if any) are polled which will take extra time to complete.
 
-The recomended mechanism to invoke polling is cron. If you want to invoke the
-mysql-poller.pl application every 3 minutes, you would add the following cron
-entry:
-  */3 * * * * /path/to/install/directory/mysql-poller.pl --poll-cached-pools
-This cron entry assumes you are using the default cache file.
+There are two recommend mechanisms to invoke polling.
+
+(1) One is with cron. If you want to invoke the mysql-poller.pl application
+every 3 minutes, you would add the following cron entry:
+  */3 * * * * /path/to/mysql-poller.pl --poll-cached-pools
+If you want to invoke the mysql-poller.pl application every 20 seconds:
+  */1 * * * * sleep 00; /path/to/mysql-poller.pl --poll-cached-pools
+  */1 * * * * sleep 20; /path/to/mysql-poller.pl --poll-cached-pools
+  */1 * * * * sleep 40; /path/to/mysql-poller.pl --poll-cached-pools
+
+(2) The other, as of MPP version 1.0.3, is with mysql-polld.pl
+You specify the interval in seconds between polling with the --interval option.
+/path/to/mysql-polld.pl --interval=20 --poll-cached-pools
+
+* Both (1) and (2) assume you are using the default cache file, and have
+configured in the required parameters (username, password, database) into the
+application tool.
+
+** As of MPP 1.0.3, mysql-polld.pl is stable, but has not undergone extensive
+field testing. As such it cannot be guaranteed and thus recommended for
+production, although it should work for you.
+In the author's opion, using mysql-polld is safer than cron, and initial
+tests show less system resource utilization.
 
 
 Suggested Math for Polling Interval
@@ -265,6 +283,25 @@ Example B:
     process begins before the previous process has ended) is not recommended,
     as each polling process relies on the previous process's polling results
     which need to be written to the cache file for the next process.
+
+
+Poll interval for mysql-polld.pl
+
+If you are using the mysql-polld.pl instead of cron, you can safely run it
+with the interval set to anything you like, including 1 second. If the
+interval is not long enough, mysql-polld will stall successive cycles and
+eventually skip cycles in order to get back on the interval schedule.
+
+You might want to set mysql-polld $DEBUG to 1 and watch the output to see
+how fast the process goes. The DEBUG will report if a delay is incurring
+between actual and scheduled polling cycles.
+
+This is safe, because the mysql-polld process opens the cache once on start
+up, and saves the cache after completing a cycle, but never has to reopen
+the cache again. Additionally, as mentioned, polling cycles are delayed
+or skipped in order to prevent overlap.
+
+
 
 
 CHECKPOINT THEOLOGY
