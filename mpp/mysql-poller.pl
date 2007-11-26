@@ -61,6 +61,24 @@ BEGIN {
                       );
 }
 
+
+GetOptions( \%options,
+        "cache-file=s", "cache-init",       "cache-dump",
+        "failoverpool=s", "checkpoint=s@",
+        "poll",         "poll-pool=s",      "poll-cached-pools",
+        "list",         "list-pool=s",      "list-cached-pools",
+        "is-active=s",  "report=s",
+        "recover=s",    "activate-primary", "delete=s",
+        "database=s",   "username=s",       "password=s",
+        "test-http=s",  "help",
+        );
+# Some defaults;
+$options{'cache-file'} ||= $failover_cachefile;
+$options{'database'}   ||= "test";
+$options{'username'}   ||= "default_mysql_username";
+$options{'password'}   ||= "default_mysql_password";
+
+
 sub usage (@) {
     my $mesg    = shift || undef;
     my $help    =<<HELP_EOF;
@@ -95,6 +113,10 @@ sub usage (@) {
                                     #  "failoverpool" configuration is retrieved from the cache for the specified pool
     --poll-cached-pools             # Poll all failover pools currently existing in the cache
                                     #  "failoverpool" configuration is retrieved from the cache for each cached pool
+    # MySQL connection options for --poll, --poll-pool, and --poll-cached-pools
+    --database                      # MySQL Authorization database
+    --username                      # MySQL Authorization username
+    --password                      # MySQL Authorization password
     --list                          # List the servers cached with stored number of requests
     --list-pool=pool_name           # same as --list, but lists the specified pool. --failoverpool config is not used
     --list-cached-pools             # same as --list but lists servers from all pools found in the cache
@@ -130,22 +152,6 @@ HELP_EOF
     $help   .= ("\n".$mesg."\n") if defined $mesg;
     return $help;
 }
-
-GetOptions( \%options,
-        "cache-file=s", "cache-init",       "cache-dump",
-        "failoverpool=s", "checkpoint=s@",
-        "poll",         "poll-pool=s",      "poll-cached-pools",
-        "list",         "list-pool=s",      "list-cached-pools",
-        "is-active=s",  "report=s",
-        "recover=s",    "activate-primary", "delete=s",
-        "database=s",   "username=s",       "password=s",
-        "test-http=s",  "help",
-        );
-# Some defaults;
-$options{'cache-file'} ||= $failover_cachefile;
-$options{'database'} ||= "test";
-$options{'username'} ||= "default_mysql_username";
-$options{'password'} ||= "default_mysql_password";
 
 
 if (
