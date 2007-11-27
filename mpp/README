@@ -1,6 +1,6 @@
 MySQL Pool & Poller
 
-ver 1.00.000 / 20051214
+ver 1.0.3
 
 
 DESCRIPTION
@@ -10,7 +10,7 @@ group states of mysql servers participating in a pool.
 
 As of version 1.0, a failover pool is the only pool type that is configurable.
 In a failover pool, one or more Real Servers participate as a group to keep a
-Virtual Server up 365x24x7. With only one real server allowed to respond for
+Virtual Server up 24x7. With only one real server allowed to respond for
 the Virtual Server at a single time. The Virtual Server's actual connectivity
 is managed by a third-party redundancy mechanism. This MySQL Pool & Poller
 application is used to determine which server is the ACTIVE server at any
@@ -36,10 +36,12 @@ The following load balancers have been tested with this application:
     Linux Virtual Server (a.k.a. LVS)
         The Linux Virtual Server Project
         http://www.linuxvirtualserver.org/
-
-The following load balancers will be tested with this application in the future:
     F5 Big IP
         http://www.f5networks.com
+
+The following load balancers will be tested with this application in the future:
+      MPP is in progress to be reworked and tested under MySQL Proxy
+      MySQL Proxy (work completed r1.0.1, currently testing)
 
 The following global load balancers are currently being tested for a future
 Global-aware (multi-geographical-poller) version of this application:
