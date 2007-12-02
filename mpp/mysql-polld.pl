@@ -475,6 +475,7 @@ while (1) {
     print ("-- Interval Drift: ".($start_time - ($init_time + ($pollInterval * $n)))." sec, (actual:".$start_time."/scheduled:".($init_time + ($pollInterval * $n)).") --\n") if $DEBUG;
     print ("[Iteration: ".++$n."]\n") if $DEBUG;
 
+    $failover->cache_retrieve() || enexpected_exit("Could not open cache file: ".$failover->cache_file()."!\n");
     if ((exists $options{'poll-pool'}) && (defined $options{'poll-pool'})) {
         $failover   = init_failover_config($failover,$options{'poll-pool'});
         poll_failover_pool(
