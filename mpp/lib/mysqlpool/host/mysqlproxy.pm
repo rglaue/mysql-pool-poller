@@ -151,7 +151,7 @@ sub connect ($$) {
 sub dbhandle ($) {
     my $self	= shift;
     my $dbh;
-    if (defined $self->{'_dbh'}) {
+    if ((defined $self->{'_dbh'}) && ($self->{'_dbh'}->ping())) {
         $dbh	= shift || return $self->{'_dbh'};
     } else {
         if (($DEBUG) && (! defined $_[0])) {
