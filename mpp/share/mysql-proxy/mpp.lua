@@ -84,6 +84,13 @@ if not proxy.global.config.mpp then
                 OK_CRITICAL = 4,
                 FAIL = 5
             },
+            by_number = {
+                proxy_type = {},
+                proxy_state = {},
+                mpp_type = {},
+                mpp_state = {},
+                mpp_status = {},
+            },
         },
         RW = {
             ACTIVE = 1,
@@ -97,6 +104,23 @@ if not proxy.global.config.mpp then
         ROupstatus = 1,
         lbmethod = "rr"
     }
+    -- reverse map MySQL Proxy type and state
+        proxy.global.config.mpp.levels.by_number.proxy_type[proxy.BACKEND_TYPE_UNKNOWN] = "BACKEND_TYPE_UNKNOWN";
+        proxy.global.config.mpp.levels.by_number.proxy_type[proxy.BACKEND_TYPE_RW] = "BACKEND_TYPE_RW";
+        proxy.global.config.mpp.levels.by_number.proxy_type[proxy.BACKEND_TYPE_RO] = "BACKEND_TYPE_RO";
+        proxy.global.config.mpp.levels.by_number.proxy_state[proxy.BACKEND_STATE_UNKNOWN] = "BACKEND_STATE_UNKNOWN";
+        proxy.global.config.mpp.levels.by_number.proxy_state[proxy.BACKEND_STATE_UP] = "BACKEND_STATE_UP";
+        proxy.global.config.mpp.levels.by_number.proxy_state[proxy.BACKEND_STATE_DOWN] = "BACKEND_STATE_DOWN";
+    -- reverse map the MPP type, state and status
+    for mpp_type, num in pairs (proxy.global.config.mpp.levels.type) do
+        proxy.global.config.mpp.levels.by_number.mpp_type[num] = mpp_type;
+    end
+    for mpp_state, num in pairs (proxy.global.config.mpp.levels.state) do
+        proxy.global.config.mpp.levels.by_number.mpp_state[num] = mpp_state;
+    end
+    for mpp_status, num in pairs (proxy.global.config.mpp.levels.status) do
+        proxy.global.config.mpp.levels.by_number.mpp_status[num] = mpp_status;
+    end
 end
 
 function load_balance(TYPE)
@@ -105,8 +129,8 @@ function load_balance(TYPE)
     local mpp = proxy.global.config.mpp
 
     local rr_node = proxy.global.config.mpp.rr_val
-    if mpp.debug >= 1 then
-        print("> proxy.global.config.mpp.rr_val = " .. proxy.global.config.mpp.rr_val)
+    if mpp.debug >= 2 then
+        print("proxy.global.config.mpp.rr_val = " .. proxy.global.config.mpp.rr_val)
     end
 
     -- implement round robin of RW servers (currently 1 server for failover strategy)
@@ -122,7 +146,7 @@ function load_balance(TYPE)
         print ("** entering round robin load balance negotiation **")
     end
     while not ((gotserver == 1) or (rr_node_count == (#proxy.backends))) do
-        if mpp.debug >= 1 then
+        if mpp.debug >= 2 then
             print ("iteration: " .. rr_node_count)
         end
         if (mpp.nodes[proxy.backends[rr_node].address] == nil) then
@@ -135,31 +159,31 @@ function load_balance(TYPE)
         end
         if mpp.debug >= 1 then
             local rr_node_address = proxy.backends[rr_node].address
-            print("## evaluating rr_node as rr_val = " .. rr_node)
-            print(string.format("## node state requirement: %s", mpp.levels.state["ACTIVE"]))
-            print(string.format("## node %s state: %s", rr_node_address, mpp.nodes[rr_node_address].state))
-            print(string.format("## node status requirement: %s", mpp.RWupstatus))
-            print(string.format("## node %s status: %s", rr_node_address, mpp.nodes[rr_node_address].status))
+            print(string.format("[ evaluating backend node = %s ]", rr_node))
+            print(string.format(" -- node state requirement: %s", mpp.levels.state["ACTIVE"]))
+            print(string.format(" -- node %s state: %s", rr_node_address, mpp.nodes[rr_node_address].state))
+            print(string.format(" -- node status requirement: %s", mpp.RWupstatus))
+            print(string.format(" -- node %s status: %s", rr_node_address, mpp.nodes[rr_node_address].status))
         end
         if ((proxy.backends[rr_node])
             and (mpp.nodes[proxy.backends[rr_node].address].state == mpp.levels.state["ACTIVE"])
             and (mpp.nodes[proxy.backends[rr_node].address].status <= mpp.RWupstatus))
         then
             if mpp.debug >= 1 then
-                print("found ACTIVE UP backend at rr_node: " .. rr_node)
+                print("found ACTIVE UP backend at node: " .. rr_node)
             end
             gotserver = 1
             break
         elseif proxy.backends[(rr_node + 1)] then
             rr_node = rr_node + 1
-            if mpp.debug >= 1 then
-                print("incrementing rr_node: " .. rr_node)
+            if mpp.debug >= 2 then
+                print("incrementing node evaluation: " .. rr_node)
             end
             gotserver = 0
         else
             rr_node = 1
-            if mpp.debug >= 1 then
-                print("resetting rr_node: " .. rr_node)
+            if mpp.debug >= 2 then
+                print("resetting node evaluation: " .. rr_node)
             end
             gotserver = 0
         end
@@ -362,14 +386,14 @@ function read_query( packet )
                                 break
                             end
                         end
-                        table.insert(command_message, { nodename, "proxy", "type", proxynode.type })
-                        table.insert(command_message, { nodename, "proxy", "state", proxynode.state })
+                        table.insert(command_message, { nodename, "proxy", "type",    mpp.levels.by_number.proxy_type[proxynode.type] })
+                        table.insert(command_message, { nodename, "proxy", "state",   mpp.levels.by_number.proxy_state[proxynode.state] })
                         table.insert(command_message, { nodename, "proxy", "address", proxynode.address })
                         table.insert(command_message, { nodename, "proxy", "connected_clients", proxynode.connected_clients })
-                        table.insert(command_message, { nodename, "mpp", "type", node.type })
-                        table.insert(command_message, { nodename, "mpp", "state", node.state })
-                        table.insert(command_message, { nodename, "mpp", "status", node.status })
-                        table.insert(command_message, { nodename, "mpp", "weight", node.weight })
+                        table.insert(command_message, { nodename, "mpp",   "type",    mpp.levels.by_number.mpp_type[node.type] })
+                        table.insert(command_message, { nodename, "mpp",   "state",   mpp.levels.by_number.mpp_state[node.state] })
+                        table.insert(command_message, { nodename, "mpp",   "status",  mpp.levels.by_number.mpp_status[node.status] })
+                        table.insert(command_message, { nodename, "mpp",   "weight",  node.weight })
                     end
                     proxy.response.type = proxy.MYSQLD_PACKET_OK
                     proxy.response.resultset = {
@@ -419,7 +443,6 @@ function read_query( packet )
                 }
                 return proxy.PROXY_SEND_RESULT
             else
-                -- if not table.maxn(command_message) then
                 if not command_message[1] then
                     command_message[1] = { "SUCCESS" }
                 end
@@ -444,10 +467,21 @@ function read_query( packet )
             end
 
             local servernode = load_balance("RW")
-
-            print(string.format("NOTICE: servernode %s",servernode))
-
-            if servernode == 0 then
+            if servernode >= 1 then
+                if proxy.connection.backend_ndx == 0 then
+                    -- then we load balance in the read_query()
+                    proxy.connection.backend_ndx = servernode
+                    if mpp.debug >= 1 then
+                        print(string.format("read_query lb select: node %s",servernode))
+                    end
+                else
+                    servernode = proxy.connection.backend_ndx
+                    if mpp.debug >= 1 then
+                        print(string.format("read_query continuing: node %s",servernode))
+                    end
+                end
+            -- if servernode == 0 then there are no valid nodes
+            elseif servernode == 0 then
                 if query ~= nil and string.upper(query) == "SET AUTOCOMMIT=0" then
                     -- deal with DBD::mysql always setting autocommit on every connection
                     if mpp.debug >= 1 then
@@ -483,33 +517,21 @@ function connect_server()
     if mpp.debug >= 1 then
         print("\n[connect_server] " .. proxy.connection.client.address)
 
-        print("PROXY: proxy.BACKEND_TYPE_UNKNOWN  : " .. proxy.BACKEND_TYPE_UNKNOWN)
-        print("PROXY: proxy.BACKEND_TYPE_RW       : " .. proxy.BACKEND_TYPE_RW)
-        print("PROXY: proxy.BACKEND_TYPE_RO       : " .. proxy.BACKEND_TYPE_RO)
-        print("PROXY: proxy.BACKEND_STATE_UNKNOWN : " .. proxy.BACKEND_STATE_UNKNOWN)
-        print("PROXY: proxy.BACKEND_STATE_UP      : " .. proxy.BACKEND_STATE_UP)
-        print("PROXY: proxy.BACKEND_STATE_DOWN    : " .. proxy.BACKEND_STATE_DOWN)
-        print("PROXY: proxy.connection.backend_ndx: " .. proxy.connection.backend_ndx)
-    end
-
-    for i = 1, #proxy.backends do
-        local s        = proxy.backends[i]
-        local pool     = s.pool -- we don't have a username yet, try to find a connections which is idling
-        if mpp.debug >= 1 then
-            print("  [".. i .."].type = " .. s.type)
-            print("  [".. i .."].state = " .. s.state)
-            print("  [".. i .."].address = " .. s.address)
-            print("  [".. i .."].connected_clients = " .. s.connected_clients)
+        for i = 1, #proxy.backends do
+            local s        = proxy.backends[i]
+            print(string.format("  [%s] (%s) %s(%s)/%s(%s) connected_client = %s",
+            i,s.address,
+            mpp.levels.by_number.proxy_type[s.type],s.type,
+            mpp.levels.by_number.proxy_state[s.state],s.state,
+            s.connected_clients))
         end
     end
 
     -- -----------------------------------------
+    -- load balancing
     --
-    -- load balancing in the read_query function
-    --
-    --
-
     local servernode = load_balance("RW")
+    --
 
     if servernode == 0 then
         proxy.connection.backend_ndx = 0
