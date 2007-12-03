@@ -73,8 +73,8 @@ if not proxy.global.config.mpp then
                 UNKNOWN = 0,
                 ACTIVE = 1,
                 STANDBY = 2,
-                FAIL_ONLINE = 3,
-                FAIL_OFFLINE = 4
+                FAILED_ONLINE = 3,
+                FAILED_OFFLINE = 4
             },
             status = {
                 UNKNOWN = 0,
