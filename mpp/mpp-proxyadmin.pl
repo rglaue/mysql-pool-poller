@@ -24,6 +24,7 @@ BEGIN {
     $DEBUG      = 1;
 
     use vars    qw(%options $failover_cachefile $log $failover $proxyhost);
+    $failover_cachefile = "/usr/local/mpp/cache/mpp-cache";  # The default cache file
 }
 
 sub usage (@) {
@@ -100,9 +101,10 @@ $options{'username'}   ||= "default_mysql_username";
 #$options{'password'}   ||= "default_mysql_password"; # uncomment to set a default
 $options{'proxyhost'}  ||= "0.0.0.0";
 $options{'proxyport'}  ||= "3306";
+# This does not allow for a MySQL user to authenticate without a password
+# To authenticate without a password, comment out the proxypass option below
 $options{'proxyuser'}  ||= $options{'username'};
-#$options{'proxypass'}  ||= $options{'password'};
-
+$options{'proxypass'}  ||= $options{'password'};
 
 if (! defined $options{'cache-file'}) {
     die usage("Cache file not provided!");

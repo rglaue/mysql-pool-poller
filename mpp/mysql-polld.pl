@@ -106,8 +106,13 @@ $options{'username'}   ||= "default_mysql_username";
 #$options{'password'}   ||= "default_mysql_password"; # uncomment to set a default
 #$options{'proxyhost'}  ||= "0.0.0.0";
 #$options{'proxyport'}  ||= "3306";
-#$options{'proxyuser'}  ||= $options{'username'};
-#$options{'proxypass'}  ||= $options{'password'};
+# Only set these options if we have received input for the --proxyhost option
+if (exists $options{'proxyhost'}) {
+    # This does not allow for a MySQL user to authenticate without a password
+    # To authenticate without a password, comment out the proxypass option below
+    $options{'proxyuser'}  ||= $options{'username'};
+    $options{'proxypass'}  ||= $options{'password'};
+}
 
 if (! defined $options{'cache-file'}) {
     die usage("Cache file not provided!");
@@ -185,8 +190,7 @@ $SIG{'INT'} = \&sig_exit;
 
 # store up and pront out application error messages
 sub errormsg (@) {
-    my $self            = shift;
-    $self->debugmsg(@_);
+    debugmsg(@_);
     if (@_ >= 1) {
         $ERRORMSG   = join("\n",@_);
     } else {
@@ -197,7 +201,6 @@ sub errormsg (@) {
 
 # fataly exit from code routines, concating error messages and passing to errormsg()
 sub fatalerror (@) {
-    my $self            = shift;
     my @msg = (errormsg(),@_);
     errormsg(@msg);
     return undef;
