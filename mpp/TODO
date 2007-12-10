@@ -1,6 +1,12 @@
 TO DO
 ------------------------------
 
+- author's note -
+Although this is the TODO list, much of what is on is targeted for a specific
+release version. It should be seen as a wish list in regards to the version
+number, but also describe the priority of the TODO list at the same time.
+--
+
 [revision 2.00.000]
 -----CONFIGURATION-----
 [ ] Build a pool configuration based on a Virtual Server defined in the
