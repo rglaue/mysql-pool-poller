@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 ##
-# mpp-proxyadmin.pl               ver1.00.000/REG     20071110
+# mpp-proxyadmin.pl               20071203/REG
 # Script to load data from MPP into MySQL Proxy.
 # Or to allow administrators to manage the MPP-as-Lua
 #   configuration in MySQL Proxy
@@ -19,8 +19,8 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'MySQL Proxy Communicator';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.000';
-    $LASTMOD    = 20071111;
+    $VERSION    = '1';
+    $LASTMOD    = 20071203;
     $DEBUG      = 1;
 
     use vars    qw(%options $failover_cachefile $log $failover $proxyhost);

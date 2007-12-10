@@ -63,7 +63,7 @@ if not proxy.global.config.mpp then
         proxy_cache = true,
         rr_val = 0,
         nodes = {},
-        debug = 1,
+        debug = 0,
         levels = {
             type = {
                 PRIMARY = 0,

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 ##
-# mysql-polld.pl                ver1.00.000/REG     20071126
+# mysql-polld.pl                20071203/REG
 # Script to run polling process in a daemonised way.
 ##
 
@@ -17,9 +17,9 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'MPP Poll Daemon';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.000';
-    $LASTMOD    = 20071126;
-    $DEBUG      = 1;
+    $VERSION    = '1';
+    $LASTMOD    = 20071203;
+    $DEBUG      = 0;
 
     use vars    qw($pollInterval $pollThreshold $maxRequests $requestLevel);
     $pollInterval   = 10; # time in seconds

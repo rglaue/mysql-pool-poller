@@ -39,7 +39,7 @@ The following load balancers have been tested with this application:
     F5 Big IP
         http://www.f5networks.com
 
-The following load balancers will be tested with this application in the future:
+The following load balancers are currently being tested with this application:
       MPP is in progress to be reworked and tested under MySQL Proxy
       MySQL Proxy (work completed r1.0.1, currently testing)
 

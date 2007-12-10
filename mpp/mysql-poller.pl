@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 ##
-# mysql-poller.pl               ver1.00.000/REG     20060103
+# mysql-poller.pl               20071126/REG
 # Script to poll a pool of servers and report their statuses.
 ##
 
@@ -18,8 +18,8 @@ BEGIN {
     use vars    qw($NAME $AUTHOR $VERSION $LASTMOD $DEBUG $DEBUGMSG $ERRORMSG);
     $NAME       = 'MySQL Poller';
     $AUTHOR     = 'rglaue@cait.org';
-    $VERSION    = '1.00.000';
-    $LASTMOD    = 20071026;
+    $VERSION    = '3';
+    $LASTMOD    = 20071126;
     $DEBUG      = 0;
 
     use vars    qw($maxRequests $timeBetweenRequests $requestLevel);

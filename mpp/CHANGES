@@ -1,5 +1,29 @@
 CHANGES
 ------------------------------
 
-[2005-01-19 / version 1.00.000]
-Initial Release
+[2007-12-10 / version 1.00.002]
+mysql-polld.pl created and added.
+Initial testing for MySQL Proxy integration completed.
+Various bug fixes, corrections and updates.
+
+[2007-11-16 / version 1.00.002]
+The mpp.lua file has been updated to address an issue I refer to as
+"all_node_down", where all Proxy backend servers are down and MPP cannot
+connect to load its evaluations into Proxy.
+This version also address the issue where you could not supply a blank
+password to mpp-proxyadmin.pl.
+This version also contains a work around for MySQL Bug #32464 for DBD::mysql. 
+
+[2007-11-13 / version 1.00.001]
+Integration with MySQL Proxy Tested. Added a mysqlproxy host module into the
+API set, mpp.lua Lua script for MySQL Proxy, and created an admin application
+mpp-proxyadmin.pl to manage MPP evaluations from MPP cache into Proxy
+internals.
+
+[2007-11-11 / version 1.00.000]
+First public release. Integration with Linux Virtual Server and F5 Networks
+BigIP tested.
+APACHE LICENSE 2.0 adopted.
+
+[2005-01-19 / version 1.00.000-c1]
+Internal Release
