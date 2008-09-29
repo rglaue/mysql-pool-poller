@@ -2,8 +2,18 @@
 my $wdr   = "/usr/local/mpp";
 my $exe   = "mysql-poller.pl";
 my $bin   = ($wdr."/".$exe);
-my $cache = "/usr/local/mpp/cache/mpp-cache";
-my $location = "site-A";
+my $cache;
+
+my %cachefiles = (
+    standard => "/usr/local/mpp/cache/mpp-cache",
+    mysqlA   => "/usr/local/mpp/cache/mpp-cache1",
+    mysqlB   => "/usr/local/mpp/cache/mpp-cache2",
+    default  => "standard"
+);
+
+my $siteAcodename = "site-A";
+my $siteBcodename = "site-B";
+my $location = $siteAcodename;
 
 use lib '/usr/local/mpp/lib';
 use mpp_server_config;
@@ -33,10 +43,22 @@ foreach my $gpool (@gpools) {
     }
 }
 
+sub display_cachefiles () {
+    my $data;
+    foreach my $cachefile (keys %cachefiles) {
+        $data .= "    ".$cachefile."\t".$cachefiles{$cachefile}."\n";
+    }
+    return $data;
+}
+
 sub usage {
-        print "Usage: $0 [list|recover]\n";
-        print "Usage: $0 list <pool-name>\n";
-        print "Usage: $0 recover [site-A|site-B|all|<pool-name>] <server-name> <server-port>\n";
+        print "Usage: $0 [cache=<cachename>] [list|recover]\n";
+        print "Usage: $0 [cache=<cachename>] list <pool-name>\n";
+        print "Usage: $0 [cache=<cachename>] recover [".$siteAcodename."|".$siteBcodename."|all|<pool-name>] <server-name> <server-port>\n";
+        print "\n";
+        print "The 'cache' options need not be specified, but if you do not specify the 'cache', mpptool uses 'default' as the <cachename>.\n";
+        print "Available cachefiles:\n";
+        print display_cachefiles();
 }
 
 
@@ -118,6 +140,33 @@ sub siteB_mysql_server_recover () {
     loc_mysql_server_recover("siteB");
 }
 
+if ($ARGV[0] =~ /cache\=(.*)/i) {
+    my $cachename = $1;
+    shift @ARGV;
+    if ($cachename eq "default") {
+        $cache = $cachefiles{$cachefiles{'default'}} if exists $cachefiles{'default'};
+    } elsif (exists $cachefiles{$cachename}) {
+        $cache = $cachefiles{$cachename};
+    } elsif (   (! exists $cachefiles{$cachename})
+             && (-f $cachename) ) {
+        $cache = $cachename;
+    }
+} else {
+    if (exists $cachefiles{'default'}) {
+        $cache = $cachefiles{$cachefiles{'default'}};
+    }
+}
+# Check that the cache file exists
+if (! defined $cache) {
+    print "ERROR: You must supply a cache file to use, or set the default cache file.\n";
+    usage();
+    exit 1;
+} elsif (! -f $cache) {
+    print "ERROR: The cache file ".$cache." does not exist!\n";
+    usage();
+    exit 1;
+}
+
 if ($ARGV[0] eq "list") {
     my $POOL_NAME = $ARGV[1];
     mysql_pool_list($POOL_NAME);
@@ -127,15 +176,15 @@ if ($ARGV[0] eq "list") {
     my $SERVER_PORT = $ARGV[3];
     if ( defined $SERVER_NAME ) {
         if ( ! defined $SERVER_PORT ) {
-            print "ERROR: You must supply a server port with the server name!";
+            print "ERROR: You must supply a server port with the server name!\n";
             usage();
             exit 1;
         }
     }
-    if ($LVS_OR_POOL eq "site-A") {
+    if ($LVS_OR_POOL eq $siteAcodename) {
         all_mysql_pool_recover();
         siteA_mysql_server_recover();
-    } elsif ($LVS_OR_POOL eq "site-B") {
+    } elsif ($LVS_OR_POOL eq $siteBcodename) {
         all_mysql_pool_recover();
         siteB_mysql_server_recover();
     } elsif ($LVS_OR_POOL eq "all") {
