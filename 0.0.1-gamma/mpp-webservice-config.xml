@@ -1,0 +1,6 @@
+<config>
+    <groups>
+        <group name="poolcache1" cachefile="/usr/local/mpp/cache/mpp-cache1" />
+        <group name="poolcache2" cachefile="/usr/local/mpp/cache/mpp-cache2" />
+    </groups>
+</config>

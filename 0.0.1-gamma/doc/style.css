@@ -1,0 +1,342 @@
+body{
+  padding: 0;
+  margin: 0;
+  background: #FFFFFF;
+}
+
+h2,h4{
+  margin: 0;
+  font: bold 18px Arial, Helvetica, sans-serif;
+  color: #000;
+}
+
+h4{
+  font-size: 0.75em;
+}
+
+
+p{
+  font: normal 12px Arial, Helvetica, sans-serif;
+  color: #000;
+}
+
+#header{
+  padding: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #ffc; // #ffc
+}
+
+#navbar{
+  padding: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #fc0; // #fc0
+}
+
+#navbar ul{
+  list-style: none;
+}
+
+#navbar li{
+  text-align: center;
+  display: inline;
+  padding-right: 4%;
+  background: #fb0;
+}
+
+#navbar a:link,#navbar a:visited{
+  font: normal 12px Arial, Helvetica, sans-serif;
+  color: #039;
+  text-decoration: none;
+}
+
+#navbar a:hover{
+  text-decoration: underline;
+}
+
+#mainwrapper{
+  clear: both;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  background: #eee;
+}
+
+#mainwrapper .leftcol{
+  position: relative;
+  float: left;
+}
+
+#mainwrapper .rightcol{
+  position: relative;
+  float: right;
+}
+
+#controlpanel{
+  width: 25%;
+  height: 100%;
+  position: relative;
+  float: left;
+  display: inline;
+  background: #ffc;
+}
+
+#monitorpanel{
+  width: 75%;
+  position: relative;
+  float: right;
+  display: inline;
+}
+
+#leftbar{
+  width: 180px;
+  padding: 10px;
+}
+
+#centerbar{
+  float: left;
+  width: 380px;
+  padding: 10px;
+  background: #fff;
+}
+
+#rightbar{
+  width: 180px;
+  padding: 10px;
+}
+
+#footer{
+  clear: both;
+  padding: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #ffc; // #ffc
+}
+
+/* ****************************** */
+
+/* Containers for controlpanel */
+
+#controlpanel h2 {
+  margin: 0;
+  font: bold 18px Arial, Helvetica, sans-serif;
+  text-align: center;
+  color: #eee;
+}
+
+// end controlpanel containers
+
+/* Containers for monitorpanel */
+#groups {
+  padding: 0.5em 0.5em 0.5em 0.5em;
+  margin: 0.25em 0.25em 0.25em 0.25em;
+  border: 1px #CCCCCC solid;
+}
+
+#groups h1 {
+  text-align: center;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 4em;
+  padding-right: 4em;
+  margin-bottom: 2em;
+}
+
+#groups p {
+  font-size: 1.2em;
+}
+
+#group {
+  clear: both;
+  display: block;
+  font-size: .75em;
+  width: 410px;
+  background-color: #FBFBFB;
+  margin: 0.25em 0.25em 0.25em 0.25em;
+  overflow: hidden;
+}
+
+#group .groupname {
+  background-color: #990099;
+  text-align: left;
+  color: #FBFB00;
+  font: bold 1em Arial, Helvetica, sans-serif;
+  text-decoration: none;
+  padding-top: 0.25em;
+  padding-bottom: 0em;
+  padding-left: 1em;
+  padding-right: 0em;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  height: 25px;
+  width: 400px;
+  position: relative;
+  float: left
+}
+
+#pools {
+  clear: both;
+  width: 410px;
+  padding: 5px;
+  background-color: #FBFB00;
+  display: block;
+}
+
+#pool {
+  clear: both;
+  font-size: .75em;
+  width: 400px;
+  background-color: #FBFBFB;
+  border: 1px #999999 dashed;
+  padding-left: 0em;
+  overflow: hidden;
+  display: block;
+}
+
+#pool .poolname {
+  background-color: #FFF0F0;
+  text-align: center;
+  font-size: 1.5em;
+  padding-top: 0.25em;
+  padding-bottom: 0em;
+  padding-left: 0em;
+  padding-right: 0em;
+  margin: 0em 0em 0em 0em;
+  height: 25px;
+  width: 330px;
+  position: relative;
+  float: left
+}
+
+#pool .poolstatus {
+  text-align: center;
+  font-size: 1em;
+  padding-top: 0.5em;
+  padding-bottom: 0.25em;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  margin: 0em 0em 0em 0em;
+  height: 25px;
+  width: 25px;
+  position: relative;
+  float: right
+}
+
+#pool .toggle {
+  cursor: default;
+}
+
+#pool .dynamic {
+  display: inline;
+  position: relative;
+  float: left;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+}
+
+#poolserver {
+  clear: both;
+  display: block;
+  margin-top: 0.75em;
+  margin-bottom: 0.25;
+}
+
+#poolserver-name {
+  clear: both;
+  width: 110px;
+  position: relative;
+  float: left
+}
+
+#poolserver-failover-type {
+  width: 80px;
+  position: relative;
+  float: left
+}
+
+#poolserver-failover-state {
+  width: 80px;
+  position: relative;
+  float: left
+}
+
+#poolserver-failover-status {
+  width: 80px;
+  position: relative;
+  float: left
+}
+
+#poolserver-status, #poolserver-checkpointserver-status {
+  display: inline;
+  clear: both;
+  margin-right: 0.5em;
+  margin-left: 0.5em;
+  margin-top: 0;
+  margin-bottom: 0.5;
+  padding: 0.25em 0.25em 0.25em 0.25em;
+  position: relative;
+  float: left;
+  background: #FFEEEE;
+  width: 97%;
+}
+
+#poolserver-status-lastrequesttime, #poolserver-checkpointserver-status-lastrequesttime {
+  display: inline;
+  width: 200px;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  position: relative;
+  float: left
+}
+
+#poolserver-status-numberofrequests, #poolserver-checkpointserver-status-numberofrequests {
+  display: inline;
+  width: 150px;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  position: relative;
+  float: left
+}
+
+#poolserver-status-laststatusmessage, #poolserver-checkpointserver-status-laststatusmessage {
+  display: inline;
+  clear: both;
+  width: 100%;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  position: relative;
+  float: left
+}
+
+#poolserver-checkpoint {
+  clear: both;
+  margin-right: 0.5em;
+  margin-left: 0.5em;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0.25em 0.25em 0.25em 0.25em;
+  position: relative;
+  float: left;
+  background: #DDFFFF;
+  width: 97%;
+}
+
+#poolserver-checkpoint-type {
+  clear: both;
+  width: 50px;
+  position: relative;
+  float: left;
+}
+
+#poolserver-checkpoint-name {
+  width: 200px;
+  position: relative;
+  float: left;
+}
+
+#poolserver-checkpoint-status {
+  width: 50px;
+  position: relative;
+  float: left;
+}
