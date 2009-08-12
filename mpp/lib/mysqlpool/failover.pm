@@ -303,7 +303,7 @@ sub config_checkpoint ($) {
     $self->{'checkpoints'}{$cfg->{'server'}} = $cfg->{'cpservers'};
 
     $self->failover_checkpoints( server => $cfg->{'server'}, %{ $cfg->{'cpservers'} } )
-        || return $self->fatalerror("Checkpoint initialization failed: ".$self->errormsg());
+        || return $self->fatalerror("Checkpoint initialization failed for server ".$cfg->{'server'}.": ".$self->errormsg());
     $self->cached_checkpoint_config( server => $cfg->{'server'}, config => $args{'string'} )
         || return $self->fatalerror("Checkpoint configuration for server ".$cfg->{'server'}." could not be saved (".$args{'string'}.")");
 
