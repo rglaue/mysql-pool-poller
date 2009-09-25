@@ -52,6 +52,7 @@ sub new {
     $rhash->port                ($args{'port'})                 if exists $args{'port'};
     $rhash->username            ($args{'username'})             if exists $args{'username'};
     $rhash->password            ($args{'password'})             if exists $args{'password'};
+    $rhash->cache_database      ($args{'database'})             if exists $args{'database'};       # a synonym for cache_database
     $rhash->cache_database      ($args{'cache_database'})       if exists $args{'cache_database'};
     $rhash->cache_master_table  ($args{'cache_master_table'})   if exists $args{'cache_master_table'};
     $rhash->cache_slave_table   ($args{'cache_slave_table'})    if exists $args{'cache_slave_table'};
