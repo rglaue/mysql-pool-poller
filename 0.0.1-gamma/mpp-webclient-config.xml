@@ -1,0 +1,37 @@
+<config>
+    <services>
+<!-- Change this service configuration to match your MPP installation -->
+        <service name="server1.domain.com">
+            <url>http://server1.domain.com/mpp</url>
+            <group>poolcache1</group>
+            <group>poolcache2</group>
+        </service>
+<!-- If you want to monitor more than one MPP Service, uncomment and edit this
+     entity. You can add more entities to add more MPP Services to monitor.
+        <service name="server2.domain.com">
+            <url>http://server2.domain.com/mpp</url>
+            <group>poolcache1</group>
+            <group>poolcache2</group>
+        </service>
+-->
+    </services>
+<!-- The Web Client attempts to layout two columns in the dashboard interface.
+     You need to configure that dashboard layout here.
+-->
+    <layout>
+        <column id="1">
+            <group service="server1.domain.com"   name="poolcache1"/>
+<!-- Uncomment and edit if you have a second MPP monitoring service with at
+     least one group
+            <group service="server2.domain.com"   name="poolcache1"/>
+-->
+        </column>
+        <column id="2">
+            <group service="server1.domain.com"   name="poolcache2"/>
+<!-- Uncomment and edit if you have a second MPP monitoring service with at
+     least two groups
+            <group service="server2.domain.com"   name="poolcache2"/>
+-->
+        </column>
+    </layout>
+</config>

@@ -1,0 +1,100 @@
+README for MPP Web Service
+Version 0.00.001-gamma / 2009-06-30
+================================================================================
+
+ABOUT
+
+The MPP Web Service extends the MPP monitoring to the web, using web 2.0 ideas.
+The Web Service makes each MPP cachefile available via HTTP using XPath like
+concepts. The powerhorse behind this ability is the XML::TreePP::XMLPath module
+which can be used to transverse PERL HASH structures with an XPath like
+accessor methodology.
+
+This additionally allows external monitoring and load balancing services to
+utilize MPP monitoring data easily via HTTP REST calls.
+
+The MPP Web Client is a web-based dashboard. It collects XML structure from
+MPP Web Services, translates them into a sanitized XML Document, and translates
+the sanitized XML Document into a web-based dashboard interface using XSLT.
+
+The web-based dashboard interface uses Web 2.0 concepts to retrieve regular
+updates on MPP monitored objects identified by XPath like accessors. The use
+of XPath like accessors for the objects allows quick and easy updates to
+object values displayed in the dashboard.
+
+
+INSTALL
+
+1. Install the required PERL Modules:
+  - Web Service
+    o Data::Dump
+    o XML::TreePP
+    o XML::TreePP::XMLPath
+  - Web Client
+    o Data::Dump
+    o XML::TreePP
+    o XML::TreePP::XMLPath
+    o XML::XSLT
+    o XML::Tidy
+    o CGI
+    o JSON::PP
+2. Extract this into "{MPP_Install_Directory}/ws".
+3. Modify mpp-webservice.pl and mpp-webclient.pl to have the correct
+   {MPP_Install_Directory}. The default is '/usr/local/mpp'.
+4. Modify mpp-webservice.pl perl library path to mysqlpool::failover if the
+   path is not the default '/usr/local/mpp/lib'.
+5. Next follow the instructions in the CONFIGURATION section.
+
+
+CONFIGURATION
+
+This is the Apache configuration for the MPP Web Service.
+
+# MPP Monitoring Web Configuration
+# MPP Web Service
+ScriptAlias /mpp /usr/local/mpp/ws/mpp-webservice.pl
+# MPP Web Client
+ScriptAlias /mpp-client /usr/local/mpp/ws/mpp-webclient.pl
+Alias /mppdoc /usr/local/mpp/ws/doc
+# End MPP Web Configuration
+
+If you want both the Web Service and Web Client running on the same server,
+add this entire block to the appropriate area of the Apache configuration.
+
+If you plan to run the Web Client on a system separate from the Web Service,
+add the Web Service and Web Client configurations separately to the Apache
+configuration on the appropriate systems.
+
+If you are concerned about protecting the MPP Web Service from unauthorized
+access, you will want to use appropriate configuration in Apache to secure
+this service. Since the web client does not handle username/password
+authorization access to the Web Service, it is recommended to use the Apache
+'allow from' rule to restrict access from certain IPs to the Web Service.
+Access to the Web Client interface can be restricted however Apache is able
+to handle authorization.
+
+
+MPP Web Service
+
+The Web Service (ws/mpp-webservice.pl) needs to be available on every system in
+which MPP is running.
+
+Edit the configuration (ws/mpp-webservice-config.xml) to indicate the location
+of every active cache file, assigning a unique group name to identify each.
+
+
+MPP Web Client
+
+The Web Client (ws/mpp-webclient.pl and ws/doc) need only run on a single
+system, from which it is wished to have the client run from.
+
+Edit the first half (<services/>) of the configuration
+(ws/mpp-webclient-config.xml) to indicate the locations and groups of all MPP
+service you wish to monitor.
+Edit the second half (<layout/>) of the configuration to indicate in which
+order it is wished to have the service groups layed out.
+
+
+LICENSE
+
+The MPP Web Service maintains the same license as MPP.
