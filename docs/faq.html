@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>The MPP Slate</title>
+
+<link href="http://codepin.cait.org/CodePin.css" rel="styleSheet" type="text/css">
+
+</head>
+<body>
+
+<p>
+<h1>The MPP FAQ</h1>
+</p>
+
+<table width="100%" class="NewsItem">
+<tr><td class="NewsItemHeader">
+<strong>Frequently Asked Questions</strong>
+</td></tr>
+<tr><td class="NewsItemBody">
+
+<p align="right">
+[ <a href="http://codepin.cait.org">CodePin</a> ]
+[ <a href="http://codepin.cait.org/project/mpp">MPP Project Site</a> ]
+[ <a href="http://www.cait.org">CAIT</a> ]
+[ <a href="http://www.wiu.edu">WIU</a> ]
+</p>
+
+<p>
+I am in the process of assembling questions for the FAQ.
+</p>
+
+<p>
+<ul>
+  <li> <a href="#q1">How do I get Linux Virtual Server (LVS) to talk with MPP, and take actions?</a>
+</ul>
+</p>
+
+<hr size="1" />
+
+<p>
+<a name="q1"></a>
+<b>Q. -----
+How do I get Linux Virtual Server (LVS) to talk with MPP, and take actions?
+</b>
+<br />
+I have set up a master-master MySQL configuration across two
+database machines, and I have MPP on a designated Linux LVS machine. So
+far I can poll my MySQL machines with no difficulty, and I have one as
+ACTIVE and one as STANDBY.
+<br />
+How do I use the information that MPP produces within a LVS set up?
+
+<br /><br />
+
+<b>A</b>.
+<br />
+
+Have a look in the bin directory, particularly the script "server_is_active"
+<code> &lt;MPP_INSTALL_DIR&gt;/bin/server_is_active </code>
+<br />
+For a simple failover solution where only the ACTIVE server is given out,
+you should configure LVS to use this script as the monitoring script.
+<br />
+So, for every server LVS monitors, it will execute something like:
+<code>  server_is_active [host] [port] </code>
+<br />
+If a server is ACTIVE, the text "up" will be returned.
+And you should configure LVS to expect the string "up\n".
+(You can change this my modifying the shell script.)
+<br />
+If the server is not ACTIVE, the text "down" will be returned.
+<br />
+Unless you have the "hostile-takeover" variable assigned as true, there will only
+ever be one ACTIVE server at a time. And whatever server is ACTIVE is the server the
+"server_is_active" script will respond with "up".
+
+</p>
+
+
+</td></tr></table>
+
+</body>
+</html>

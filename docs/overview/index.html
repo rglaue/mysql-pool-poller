@@ -1,0 +1,859 @@
+<html>
+
+<head>
+<title>
+MPP Overview
+</title>
+
+<link href="http://codepin.cait.org/CodePin.css" rel="styleSheet" type="text/css">
+
+</head>
+
+<body>
+
+<h2>MPP Overview</h2>
+
+<hr size="1" />
+
+<p>
+
+The technology available today for pooling multiple instances of MySQL into a cluster or
+failover solution is listed below.
+<br />
+The solutions are listed as they are to provide a brief summary. It is not intended to
+take the place of the information on the project software's web site. You should become
+aware of all these clustering/failover solutions because they are all really great solutions.
+<br/>
+It is important that you be informed about the options out there, and choose one that fits
+your need for MySQL server deployment.
+<br />
+It is also possible to combine any or all of these technologies together to
+create another possible unique solution which may be useful.
+
+<blockquote>
+<ul>
+  <li> <b>MySQL NDB Clustered Storage Engine</b> <br />
+        <a href="http://dev.mysql.com/doc/refman/5.1/en/mysql-cluster-overview.html">
+        http://dev.mysql.com/doc/refman/5.1/en/mysql-cluster-overview.html
+        </a> <br />
+        <a href="http://www.mysql.com/products/database/cluster">
+        http://www.mysql.com/products/database/cluster
+        </a>
+  <ul>
+    <li> Developed by MySQL AB for the MySQL Server, this solution is entirely memory based
+         and differs entirely from the traditional disk based MySQL Storage Engines.
+    <li> An advantage is that this is maintained and Supported by the MySQL Community, and
+         is fast.
+    <li> A disadvantage is that the entirely memory based clustering enginer requires as
+         much ram for each node as you plan to store in the database.
+  </ul>
+  <li> <b>Sequoia</b> (Formerlly known as C-JDBC from ObjectWeb) <br />
+        <a href="https://forge.continuent.org/projects/sequoia">
+        https://forge.continuent.org/projects/sequoia
+        </a>
+  <ul>
+    <li> Developed originally by ObjectWeb, it has taken off as an Apache2 licensed
+         solution now termed Sequoia. It is an entirely JDBC/ODBC solution for clustering
+         JDBC/ODBC compliant database servers.
+    <li> An advantage is that this software is well tested and works seemlessly with
+         existing web applications accessing databases via JDBC. It has monitoring, and
+         fail-safe checking, plus more.
+    <li> Some disadvantages are that it is only for applications that can use JDBC or
+         ODBC (or C++) which can now include non-java applications. This may not seem
+         as much of a disadvantage, but if you are maintaining dozens of applications
+         using JDBC/ODBC, your cluster configuration and management is maintained on
+         a per application basis. So if you want to change
+         your cluster configuration or the like, you have to change the configuration
+         for all your applications using Sequoia.
+         Even if someone were to write a centralized configuration directory (like
+         using LDAP) where all applications get their configuration from that, the
+         Clustering is still maintained on each single application basis.
+  </ul>
+  <li> <b>Linux Heartbeat / High Availability</b> <br />
+       <a href="http://www.linux-ha.org">
+       http://www.linux-ha.org
+       </a>
+  <ul>
+    <li> Linux Heartbeat which is part of the High-Availability Project is the
+         traditional method used for configuring a failover scenerio. One server
+         is the primary server taking requests. The second server is on standby
+         receiving replication from the primary. Once the primary has a hardware
+         failure and a heartbeat can no longer be detected by the secondary server,
+         then the secondary server takes over the application IP and serves
+         requests in the primary's place.
+    <li> The advantage is that this is a widely used and tested scenerio. It is the
+         typical configuration for a failover people will have. Also, you need only
+         have two servers with the installed heartbeat software.
+    <li> A disadvantage is that it is a one-server-up solution. The first server
+         must come into error and be configured to give up use of the application
+         IP to the secondary server. The High-Availability project is designed to
+         do this.
+  </ul>
+  <li> <b>MPP (MySQL Pool-Poller) - This Solution</b> <br />
+       <a href="http://codepin.cait.org/project/mpp">
+       http://codepin.cait.org/project/mpp
+       </a>
+  <ul>
+    <li> MPP is a MySQL State Manager. It is intended to be used in combination with
+         any load balancing management software. It was primarily designed to be used
+         in conjunction with Linux Virtual Server. This software allows the configuration
+         of MySQL servers into a pool. The configured pool is managed based on a logic
+         that is assigned to it. MPP currently supports Failover logic, and has intentions
+         to eventually support Cluster logic.
+    <li> The advantage of this software is that it is a scenerio management application,
+         managing a pool of MySQL servers in a non-implemented fashion. It allows itself
+         to be plugged into any Load Balancing software that can make external calls to
+         scripts or which can implement REST based plugins. The Load Balancing software
+         is what executes the real implementation. So in theory, under an advanced
+         Load Balancing configuration, MPP can be combined with several technologies to
+         create a useful failover or cluster configuration.
+    <li> The disadvantage is that the code is fairly new as version 1.00.000, and needs
+         to be well field tested by many deployments and then fine tuned.
+         Although already field tested and proven to work, it is only in
+         version 1 and still has room to grow.
+  </ul>
+  <li> <b>Continuent</b> uni/cluster and m/cluster products (Commercial)</b><br />
+       <a href="http://www.continuent.com">http://www.continuent.com/</a>
+  <ul>
+    <li> Continuent provides a product(s) to cluster mysql similar to a multi-node
+         cluster with heartbeat. But is more sophisticated by replicating SQL
+         modification statements to all nodes rather than rely on MySQL replication
+         and controlling the failover strategy. This product specific to MySQL
+         is termed <em>m/cluster</em> .
+         It also provides a clustering
+         technique similar to Sequoia termed <em>uni/cluster</em> .
+    <li> Certainly if you want a company backing your MySQL cluster who you can hold
+         accountable, you may wish to choose their product.
+  </ul>
+</ul>
+
+<h4>Other useful information</h4>
+
+<ul>
+  <li> <a href="http://www.linuxvirtualserver.org">Linux Virtual Server</a>
+  <li> <a href="http://www.ultramonkey.org/3/lvs.html">Linux Virtual Server</a> from UltraMonkey.org
+  <li> <a href="http://www.redhat.com/software/rha/cluster">Red Hat Cluster Suite (a.k.a. Piranha)</a> based on Linux Virtual Server
+  <li> <a href="http://www.softwaresecretweapons.com/jspwiki/Wiki.jsp?page=HowToMonitorMYSQLReplicationInRealTimeWithSNMP">
+       How to Monitor MySQL Replication in Real Time with SNMP</a>
+       Using
+       <a href="http://www.softwaresecretweapons.com/jspwiki/Wiki.jsp?page=LinguineWatch">
+       Linquine Watch</a>
+  <li> <a href="http://www.openqrm.org/">Open QRM</a> provides provisioning of the entire software stack on physical servers and virtual machines like VMware, Xen and Qemu. openQRM also has a policy engine so that resources can be provisioned based on external business needs and the requirements of internal organizations automatically.
+</ul>
+</blockquote>
+
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>Linux Heartbeat</h3>
+<br/>
+
+
+Since it seems to be the most traditional form of MySQL failover, we will first look at
+the Hardware Failover solution using Heartbeat from the Linux High-Availability
+Project. Then we will look at how we can replace this configuration with MPP and then
+also grow failover capability.
+
+<a href="MPP_Software_Overview_1.png">
+<img align="left" src="MPP_Software_Overview_1.png" width="50%" border="0">
+</a>
+
+<br/>
+<br/>
+
+In the illustration on the left, you see two MySQL servers. MySQL#1 with IP 10.0.0.1
+and MySQL#2 with IP 10.0.0.2. In this example our MySQL server daemon is binding to
+IP 192.168.2.1. The Web Server is running on a third server with the Web Server daemon
+bound to IP 192.168.1.1.
+<br/>
+<br/>
+The Web Server connects to the MySQL database on either MySQL#1 or MySQL#2 depending
+on which server is using the 192.168.2.1 IP number. This is all the Web Server is
+concerned with.
+It just wants to connect to a MySQL Server Daemon on IP 192.168.2.1. It does not care
+which server it is physically located on.
+<br/>
+<br/>
+In the background, the MySQL Server daemons are replicating data back and forth to
+each other to stay in sync. So whatever is written to MySQL#1 is replicated to MySQL#2.
+If a failover occurs, MySQL#2 has the same data state as MySQL#1 and the web server
+can keep on going despite the failure of MySQL#1.
+<br/>
+<br/>
+The failover process that occurs is monitored and executed by Heartbeat from the Linux
+High-Availability Project. Heartbeat will run on MySQL#2 and constantly monitor the 
+health (or heartbeat) of MySQL#1. Should MySQL#1 no longer respond to Heartbeat's
+monitoring process on MySQL#2, then Heartbeat on MySQL#2 will configure the
+192.168.2.1 IP number on MySQL#2 and bind the MySQL process to that IP number.
+This is all done with scripts that are executed by Heartbeat.
+<br/>
+<br/>
+If Heartbeat is running on MySQL#1, then Heartbeat can be configured to allow MySQL#1
+to retake the 192.168.2.1 IP number back when it comes back online.
+<br/>
+<br/>
+This configuration is a good and eay way of creating a failover strategy for a MySQL
+deployment. However, any small details of the MySQL Daemon process you wish to monitor
+and have a failover occur for must be programmed yourself with Heartbeat, which is
+entirely possible. With this strategy, one IP is being passed around multiple servers.
+<br/>
+<br/>
+The approach with
+MPP is the one IP is placed on a NAT (or IP Forwarding) using LVS (Linux Virtual Server).
+LVS by itself can monitor MySQL using heartbeat and a variety of configurations, then
+direct requests to the MySQL server that should be responding to those requests.
+The problem with LVS using Heartbeat is that it is not intelligently monitoring the
+MySQL Server Daemon's status including replication. Nor was LVS designed to work out of
+the box in a failover mode, having one node up with the remaining on standby.
+<br/>
+<br/>
+However, LVS allows a way to determine how
+it monitors the health of a server through the use of externally called scripts
+to determine if the server is up or down. For example,
+LVS can read from a file, or execute a binary or scripted application, or make a HTTP call
+to determine what state a MySQL server is in.
+MPP was written to be this application, and give LVS the capability of operating in a
+failover mode. As we'll see in the following examples, MPP
+monitors the status and manages the state of MySQL. LVS retrieves an UP or DOWN status of
+each MySQL from MPP which is determined by the ACTIVE or STANDBY State of the server.
+
+<br/>
+
+<br clear="all"/>
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>Using MPP on LVS for a failover strategy</h3>
+<br/>
+
+The basic goal of the Linux Virtual Server Project is to build a high-performance and
+highly available server for Linux using clustering technology, which provides good
+scalability, reliability and serviceability. LVS is used as a clustering technology.
+Several real servers sit behind the LVS load balancer server. A process on the LVS load
+balancer monitors the state of each real server. If the state of the real server is
+positive, then the real server is maintained in a list of available real servers. If
+the state of the real server is negative, then it is dropped from the list of available
+real servers. When the LVS load balancer receives a request from a client, it chooses
+an available
+real server to forward the request on to. The remaining requested session is completed
+between the requesting client and real server.
+<br />
+<br />
+To determine if the real server's state is positive or negative, the LVS load balancer
+makes a defined TCP connection to the real server or executes an external "check script"
+provided by the administrator. The TCP connection is simply a connection similar to
+telneting to a port and receiving an expected string. An example would be connecting
+via TCP to port 80, sending the string "GET / HTTP/1.0" and receiving the string "200 OK".
+<br />
+<br />
+To be more accurate in determining a positive or negative state, the LVS administrator
+would create a script to be executed which may connect to the HTTP Server, receive the
+requested HTML page, and parse it for an expected string.
+<br />
+<br />
+The MySQL monitoring check script which comes with LVS is a basic TCP connection to ensure
+MySQL is still responding. However, this does not check whether a normal user connection
+can made through the server login mechanism, or if the replication link between a master
+and slave is OK.
+<br />
+<br />
+There is a check script which comes with LVS that logs in as a defined user, and requests
+a listing of tables in a defined database. This is much better, but still does not produce
+a positive or negative on the consideration of a replication link or other factors. MPP
+attempts to be a more sophisticated "check script" method of controlling LVS for a positive
+or negative MySQL state. Although it is a bit more than just a LVS "check script".
+
+
+<a href="MPP_Software_Overview_2.png">
+<img align="left" src="MPP_Software_Overview_2.png" width="50%" border="0">
+</a>
+
+<br />
+<br />
+So let's now go back to the first example that used Heartbeat, and replace it with LVS and MPP.
+You can see this new configuration in the illustration on the left.
+<br />
+<br />
+We have the same two nodes, MySQL#1 and MySQL#2, with the same server IP numbers, 10.0.0.1
+and 10.0.0.2 respectively. The Replication link is still present but as a Master-Master
+replication. The difference is that the MySQL Server IP number 192.168.2.1 has moved to
+the server LVS is on. And the same web server in the last example now accesses MySQL through
+the LVS.
+<br />
+<br />
+The MPP software polls the two MySQL servers checking connectivity and replication status.
+Based on the configuration provided and the resulting status, MPP will then determine which
+of the two servers should be the ACTIVE MySQL server, and which one remains as STANDBY.
+<br />
+<br />
+When LVS checks with MPP to see which of the two servers should be in the list of available
+real servers, MPP reports back with just the single ACTIVE server as online (positive). In
+this illustration the PRIMARY and SECONDARY servers may both be reporting a positive state, but
+MPP is configured to only allow one ACTIVE server. The PRIMARY server has higher priority
+in this failover configuration, so it is labeled as ACTIVE and the SECONDARY server is
+thus labeled as STANDBY. LVS is told the ACTIVE server is online (positive). The SECONDARY
+server is reported to LVS as offline (negative) even though it is technically online. Only
+MPP maintains the real online or offline status of the real servers, hiding this from LVS.
+LVS only needs to know if the server should or should not be in the list of available
+real servers responding to requests.
+<br />
+<br />
+Should the PRIMARY Server fail, MPP will change its state to FAIL
+and then promote the SECONDARY server from STANDBY to ACTIVE. Then in this scenerio, the next
+time LVS requests which servers should be in the list of available real servers, MPP reports
+back that the PRIMARY server is offline (negative) and the SECONDARY server is online (positive).
+Thus the SECONDARY server is the only server in the list of available real servers responding
+to requests.
+
+<br clear="all">
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>A Closer Look at MPP Mechanics</h3>
+<br/>
+
+MPP monitors the internals of the MySQL server daemon processes running on each real server
+identified in a MPP pool. It will connect to each of these real servers and not only ensure
+a connection and query is possible,
+but that the replication between the real server as a slave and its master is good.
+Once this criteria is collected, the logic is processed with this collected data to determine
+the Status and State of the MySQL real server as it participates in the pool.
+
+<a href="MPP_Software_Overview_5.png">
+<img align="right" src="MPP_Software_Overview_5.png" width="50%" border="0">
+</a>
+
+<br />
+<br />
+As of version 1.00.000 there is not yet a graphical interface to MPP. One must use command
+line execution for viewing and managing an MPP configuration. In the following illustration
+you can see the output of a happy failover configuration. This is that both MySQL servers
+are online and responding in good health. It is not an exact visual duplicate of what you
+would see in the real MPP environment, but accurate representation of this data which will
+be explained next.
+<br />
+<br />
+There are three* sections to the output when viewing MySQL pool status information.
+At the top is the column header, labeling each column of data. The second line is the
+pool identification and pool status**. And the remaining lines is the list of real servers
+in the MySQL pool with data that falls under the defined columns.
+<br />
+<blockquote>
+<font size="-1"><em>
+* There is a fourth section for real server checkpoints. It is mainly used in a global
+collocation deployment and thus is not being covered in this section.
+<br />
+<br />
+** The status of the pool which is seen on the second line in the illustration on the
+right will not be explained here. It is used in conjunction with server checkpoints
+used to determine the status of the local pool in a multi-site collation deployment.
+</em></font>
+</blockquote>
+
+The labels from the columns of data is defined as follows:
+<ol>
+  <li> <b>T</b> - The type of server this real server is acting as in this pool.
+       Possibilities are:
+    <ul>
+      <li> <b>PRIMARY</b> - The Main server which should always be first. Only one PRIMARY
+           server is allowed as of version 1.00.000
+      <li> <b>SECONDARY</b> - A next-in-line server should a higher priority
+           server fail. The SECONDARY servers are listed in the output in order based
+           on each server's priority in the pool. A SECONDARY server listed lower on
+           the list has less priority than a SECONDARY server higher on the list, and
+           will only take over ACTIVE state should the PRIMARY and higher SECONDARY
+           servers fail.
+    </ul>
+  <li> <b>Server Name</b> - The Name or IP number of the MySQL server plus the port that
+       the MySQL Daemon process is bound to. In most deployments, you want to identify
+       each server by IP number instead of hostname so that the monitoring process does
+       not rely on DNS resolution. If one did use hostnames instead of IP numbers and the
+       DNS server became unresponsive, the MPP software would put the servers into a 
+       status of FAIL because they could not be reached due to the hostname not being
+       resolvable to an IP number.
+  <li> <b>Req</b> - The Number of requests that have been made since the first request
+       received an error. When an error occurs, this number increments. Everytime the
+       MPP software calls on the real server to get data, and the data evaluates as a
+       negative, this number increases by one. And at the point this number reaches the
+       administrator-definable critical point (default is 5 error requests) the MPP
+       software puts the
+       real server into a status of FAIL and enacts a failover to the next real server
+       in the pool with highest priority and a status of OK.
+       <br />
+       Should the data MPP retrieves from the real server evaluate as positive, this
+       number gets reset to 0.
+       <br />
+       Here is the default configured status levels resulting from the given number of
+       error requests:
+       <ul>
+         <li> <b>0</b> - OK
+         <li> <b>1</b> - OK INFO
+         <li> <b>2</b> - OK WARN
+         <li> <b>3</b> - OK SOFT
+         <li> <b>4</b> - OK HARD
+         <li> <b>5</b> - FAIL CRITICAL
+       </ul>
+       <em>The administrator can change these levels (Read the documentation for understanding
+       of this). However this is the recommended and tested method. The interval between
+       polling of real servers can be decreased down to 1 minute to create a 5 minute
+       time to failover.</em>
+       <br />
+       When a real server changes in the pool from STANDBY to ACTIVE or
+       ACTIVE to STANDBY
+       its request number is incremented. Typically the number is incremented from 0 
+       to 1
+       since a STANDBY cannot become ACTIVE if its status is not OK or a SECONDARY
+       server is OK when relinquishing ACTIVE state to the PRIMARY. By default a request
+       number equalling 1 changes a real server's status to "OK INFO" which by design the purpose
+       is intended for throwing an alert.
+       <br />
+       Most self-healing issues with MySQL that are identified by MPP will resolve before
+       the next poll. Thus this is the theory behind an error request of 1 putting a
+       real server into a Status of "OK INFO".
+       <br />
+       A few examples of self-healing issues are: the slave process on a real server
+       falls behind the master and needs to get caught up, or a delay in a network connection
+       causes MPP's MySQL connection to time-out. You may only see the second example
+       of connection time-out in a global collation deployment.
+  <li> <b>Time of Last Request</b> - This is the time of when MPP last polled the real server
+       to discover data for evaluating the server status as positive or negative.
+       This string is formatted as "YYYY-MM-DD hh:mm:ss".
+  <li> <b>Status</b> - As mentioned earlier, this is the current status of the real server.
+       This status will change based on the number of errored requests MPP receives for it.
+       If there are no errored requests, the status will remain as "OK". If the total
+       number of allowed requests is met (default is 5) then the status will be
+       "FAIL CRITICAL".
+       <br/>
+       Here is the default list of possible statuses:
+        <ul>
+          <li> <b>0 - OK</b> - no errors with real server
+          <li> <b>1 - OK INFO</b> - real server has just been identifed with an error or is
+               in the midst of changing states.
+          <li> <b>2 - OK WARN</b> - Something is wrong with the real server, it did not self-heal
+               itself. Need to keep an eye on this real server in case it gets worse and
+               escelates to the next level.
+          <li> <b>3 - OK SOFT</b> - We have a problem and intervention is needed to correct it.
+          <li> <b>4 - OK HARD</b> - The problem is fatal and the real server is about to fail.
+          <li> <b>5 - FAIL CRITICAL</b> - The real server has failed. If the real server is ACTIVE,
+               then bring the next STANDBY real server online as ACTIVE.
+        </ul>
+       If you want notification of when the status escelates, MPP has been designed to be tied
+       in to <a href="http://www.nagios.org">Nagios</a>. Nagios is a monitoring application
+       which can be used to monitor the status of MPP Pools and send you alerts by email
+       or pager.
+  <li> <b>State</b> - This is the state in which the real server is currently in. The state of
+       real servers is evaluated by the MPP logic module. If you configure a MPP pool as a
+       failover pool (The only option as of version 1.00.000) then MPP uses the failover
+       logic. If you configure a MPP pool as a cluster pool (not yet available as of version
+       1.00.000) then MPP will use the cluster logic.
+        <ul>
+          <li> <b>failover pool logic</b> - With this logic, a MPP pool can only have one
+               real server with a State of ACTIVE. All other real servers will have a State
+               of STANDBY. The logic orders the STANDBY servers into a priority list, and
+               takeover of ACTIVE State occurs with the highest priority STANDBY Server.
+               <br/>
+               Concerning when the PRIMARY server has failed, and is being recovered:
+               In a failover pool configuration, you can configure an additional option of
+               "hostile take over". When this option is true, the Primary server will
+               immediately take control as ACTIVE when it is recovered. If "hostile take over"
+               is false, the Primary server will wait for the currently ACTIVE server to
+               change State to STANDBY before taking over as ACTIVE.
+               By default "hostile take over" is false because it is the safest method.
+               However this method causes a period of when there is no ACTIVE server for
+               a time period equal to the poll interval period.
+               <br/>
+               Example: Considering that the poll interval is 1 minute. If the Primary Server
+               is recovered to Status of OK, the current ACTIVE server will discover that
+               the PRIMARY server has recovered and will step down to STANDBY. At the same
+               time the PRIMARY Server will notice a SECONDARY server is currently ACTIVE
+               and will wait on STANDBY for another polling iteration.
+               So for the interval of one poll iteration, there will be no ACTIVE server.
+               This may be okay for you if your polling interval is 1 minute. This may
+               not be okay if your polling interval is 5 minutes.
+               <br/>
+               So, on the other hand, if "hostile take over" is true, the PRIMARY server never
+               checks to see if there is an ACTIVE server. It just becomes ACTIVE. But at
+               the same time, the SECONDARY server which was ACTIVE will also step down
+               to STANDBY. This may seem better, however there is a chance that the external
+               LVS clustering technology may place both servers in the list of active real
+               servers. And technically this is not a problem either because if the
+               SECONDARY server gets out of sync with the PRIMARY server, MPP will change the
+               SECONDARY server's Status to FAIL anyway.
+               <br/>
+               "hostile take over" is considered okay to use, just not well enough tested
+               for those that are paranoid. The choice to use this option is yours.
+          <li> <b>cluster pool logic</b> - This logic for creating a pool is not available
+               yet as of version 1.00.000.
+               <br />
+               This option will allow for multiple ACTIVE real servers in a single MPP pool.
+        </ul>
+       The possible states a real server can become is as follows:
+        <ul>
+          <li> <b>ACTIVE</b> - The real server is the one responding to requests
+          <li> <b>STANDBY</b> - The real server is waiting to take over as ACTIVE should the
+               currently ACTIVE server FAIL.
+          <li> <b>FAIL_ONLINE</b> - The real server has failed, but it still online and
+               reachable. This might be the result of a non-primary server's replication getting
+               out of sync with its master. Also the server could have failed offline and then
+               came back online thus changing states from FAILED_OFFLINE to FAILED_ONLINE.
+          <li> <b>FAIL_OFFLINE</b> - The server has failed and is offline. Perhaps the server
+               was shutdown or it crashed.
+          <li> <b>UNKNOWN</b> - The real server is in a State that is unknown. This is seen
+               when a MPP pool is initialized and the real servers in that pool have not been
+               evaluated yet. Once evaluated, the real server will change states from UNKNOWN
+               to one of the other four possible states above.
+               <br />
+               A server cannot go from a State UNKNOWN to ACTIVE unless it is the PRIMARY
+               real server and "hostile take over" is true. Otherwise a server must change
+               States from UNKNOWN to STANDBY and then to ACTIVE.
+        </ul>
+</ol>
+
+
+<br clear="all">
+</p>
+
+
+<br />
+<hr size="1" />
+
+
+<p>
+
+<h3>Expanding the Failover Strategy with LVS+MPP</h3>
+<br/>
+
+<a href="MPP_Software_Overview_3.png">
+<img align="left" src="MPP_Software_Overview_3.png" width="50%" border="0">
+</a>
+
+The second example deployed LVS+MPP in place of Heartbeat to create a 2 node MySQL
+failover scenerio. Now let's modify that example and add a third node, MySQL#3.
+<br/>
+<br/>
+MySQL#3 is added into the Master-Master Replication Link between MySQL servers. And then
+added into the pool of MySQL servers monitored by MPP. LVS is configured to handle MySQL#3
+in the pool for the 192.168.2.1 IP number, and queries MPP for its status.
+MySQL#3 remains in the State of STANDBY with MYSQL#2. MYSQL#1 is in a State of ACTIVE.
+<br/>
+<br/>
+Now let's assume the Master-Master replication link forming a ring in this
+example replicates from MySQL#1 to MySQL#2 to MySQL#3 and back to MySQL#1. Should MySQL#1
+have a hardware failure, MySQL#2 will take over as ACTIVE. The replication ring is now
+broken, but MySQL#3 should still be receiving updates from MySQL#2 which is its master.
+<br/>
+<br/>
+At this point you can change the master of MySQL#2 to MySQL#3 to create a 2 node replication
+ring, or repair and bring MySQL#1 back online. If you do neither, and then MySQL#2 has a
+hardware failure too, MySQL#3 should be brought online as ACTIVE since the replication
+between MySQL#2 and MySQL#3 was not broken. However, in the later case, to repair your
+MySQL Failover pool, you must bring MySQL#1 and MySQL#2 back online at the same general
+time to recreate the replication ring and bring them back up to date.
+<br/>
+<br/>
+This 3 node failover pool is possible but probably undesireable due to the complexity
+of maintaining the pool. It is better to invest in two servers to host MySQL on
+that has redundant power supplies, hard drives, CPU, etc.. than create a 3 node failover
+pool. However the situation dictates the need.
+<br/>
+<br/>
+It should be noted that the Heartbeat software version 2 now supports more than two nodes
+in a high-availability failover configuration. A 3 node failover scenerio similar to
+the 2 node scenerio in example 1 could be achieved with Heartbeat version 2.
+
+<br clear="all">
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>Operating a Failover Strategy Between Two Geographically Separated Sites</h3>
+<br/>
+
+The examples we have seen thus far are solutions that can be deployed at a single site
+to create a high availability MySQL failover pool. However, the purpose of having a
+failover strategy is to eliminate the single point of failure. But with these solutions,
+if there is only one ISP providing the internet connection, your ISP becomes a single
+point of failure.
+<br/>
+<br/>
+Because of this reason and others including: failure due to fire, disaster planning,
+higher-availability through operating multiple NOC (Network Operation Center) sites,
+five-nines uptime (99.999%) organizations deploy redundant technology in off-site
+locations. In this next example we are looking at how MPP can help us to create
+a global failover pool. In a global failover pool, a MySQL server is deployed in
+two geographically separated locations and are configured into a failover strategy.
+<br/>
+<br/>
+
+<a href="MPP_Software_Overview_4.png">
+<img align="left" src="MPP_Software_Overview_4.png" width="50%" border="0">
+</a>
+
+As of version 1.00.000, two deployments of MPP are not able to talk to each other. Due
+to this fact, this limits the type of configuration in which MPP can be deployed
+in two instances geographically. The deployment configuration in the following example
+has each MPP instance monitoring the local MySQL server directly, but the remote
+MySQL server through LVS+MPP. In this way if the remote MySQL server does not fail
+but the LVS does, thus causing the MySQL server to be unreachable, then the MPP in the
+collation can trigger a failover. Additionally should the remote MPP trigger a failover,
+the local instance will not be able to connect to the remote MySQL instance and thus
+failover as well.
+<br/>
+<br/>
+Ideally, as proven in most field tests, the ACTIVE MySQL server will fail and both MPP
+instances will failover together within less than a minute of each other. The other
+possibility is that the remote side looses its connection to the internet due to
+an ISP or router failure and the local MPP instance will then failover. The remote MPP
+instance on the failed collation site will change the status of its pool configuration
+to FAIL so that should the internet connection recover, the failover will continue.
+Pool status of OK/FAIL, which is determined by checkpoints, will be covered later.
+<br/>
+<br/>
+Looking at the example deployment configuration in the illustration on the left, two
+deployments of LVS+MPP now exist. Each deployment manages 1 MySQL server.
+The MySQL servers are configured in a Master-Master deployment. The replication link is
+over an encrypted 6Mb* per second VPN connection. Communication from MPP to the MySQL
+servers is also over an encrypted VPN connection. An Encrypted VPN is necessary to
+protect the data in the database. The ipsec software including openswan can be used to
+implement a no-software-cost deployment on Fedora Core 5 (For further install details
+perform on your FC5 install <code>yum search ipsec</code>).
+<br/>
+<em>
+* 6Mb/s is the connection speed in which this scenerio has been successfully tested at
+with moderate to high traffic.
+It is possible this scenerio could work with a 3Mb/s connection. 
+However, before deploying, it should be determined how much bandwidth is needed between
+connections. And it must be considered how much data will be replicated.
+The VPN conection must be set according to the need.
+</em>
+<br/>
+<br/>
+So in a collation deployment like this one with two MPP instances that cannot talk
+to each other,
+the configuration must be one MySQL server in each location controlled by one LVS
+server with an MPP instance. The MPP instance has one pool containing the local
+MySQL Server and the remote MySQL Server through LVS. The LVS server will only have
+the local MySQL server configured for its available real server list. Again, MPP
+keeps track of the real pool, LVS only needs to know what servers it controls and
+which one is up or down. So for this example the Site 1 MPP instance has a pool
+of two servers 10.0.11.1:3306 and 192.168.12.1:3306, while the Site 2 MPP instance
+has a pool of two servers 192.168.11.1:3306 and 10.0.12.2:3306.
+<br/>
+<br/>
+With this scenerio, the main failover mechanism moves from LVS to the F5 Big IP. The
+reason is because we are using multiple IP numbers for a single failover instance.
+LVS becomes a secondary and also fail-safe mechanism but now only monitors if the
+MySQL Server it is monitoring is OK or FAIL. MPP is still the 
+evaluation tool for managing the failover configuration.
+The F5 Big IP is a Smart DNS server. Its features and capabilites will not be described
+here except for the feature we use in this scenerio. For more information on this
+product, visit http://www.f5.com. The feature used in this example is Smart DNS
+load balancing in a WideIP configuration.
+<br/>
+<br/>
+MPP is deployed on the LVS server as the failover mechanism for LVS as well as the F5 BigIP.
+The F5 BigIP will maintain a pool configuration of two IP numbers which in this scenerio
+are 192.168.11.1 and 192.168.12.1. It will use a checking mechanism (known to F5 as ECV)
+which can query a URL on each IP in its pool. Since the IPs are on the LVS, and MPP is
+also on the LVS, we use the CGI capabilities of MPP under Apache to execute MPP's built in
+REST Web Service. Alternately, one can write a CGI application which queries MPP and formats
+the output F5 BigIP receives.
+<br/>
+<br/>
+F5 BigIP has two methods we can use to configure a failover. One based on reachability,
+which if the IP is reachable and responds then the F5 BigIP considers it UP. And one
+based on the ECV check, which the result of the ECV check tells F5 BigIP that the
+IP should be UP or DOWN.
+<br/>
+<br/>
+In our scenerio example here, we will use the ECV because each MySQL server will be
+responding on the IP maintained by LVS so that MPP on the remote side can monitor it.
+Otherwise F5 BigIP would report the MySQL server at both collation sites as UP.
+<br/>
+<br/>
+So as described above, MPP is configured to monitor the MySQL server on the local as
+well as the remote collation sites. LVS only monitors the local MySQL Server, and it
+now is configured to put the MySQL server in the list of available real servers if
+MPP reports the MySQL STATUS as "OK". This is different from our other deployment scenerios
+where LVS was only adding the MySQL servers to this list if its STATE was "ACTIVE".
+With this configuration, we have a MySQL server responding to the IP on the LVS in
+each collocation. This is not dangerous, because if the SECONDARY server gets out of
+sync with the PRIMARY, MPP will shange its STATUS to "FAIL" causing LVS to take it
+out of the list of available real servers thus making that IP unresponsive.
+F5 BigIP Smart DNS now monitors each MySQL server through the LVS for STATE of "ACTIVE".
+If the STATE is "ACTIVE" for a MySQL server, then the IP on the LVS managing the ACTIVE
+MySQL server is given out by F5 BigIP as the IP for the MySQL connectivity. This means
+your mysql domain, say mysql.domain.com, resolves to the IP of the active MySQL server.
+Thus in this scenerio, when the Web Server queries the F5 BigIP for the IP number
+of the mysql server mysql.domain.com, it is given the IP
+number 192.168.11.1. Should the primary MySQL fail, LVS will shut off access to
+it by this IP number and F5 BigIP will then start resolving mysql.domain.com to the
+IP number of 192.168.12.1 - Looks like it will work... right?? Let's move on...
+<br/>
+<br/>
+So this is all fine and dandy. Looks like we got a real global software failover for
+MySQL. But a problem still lays at the global deployment. What if the two sites, or
+MPP instances on LVS, are cut off from each other. Say the router at Site 1 starts
+receiving a DOS attack and no traffic is getting in or out of it. Yet the router is
+still technically up and responding to pings on an internal interface. What happens
+now?
+<br/>
+In the configuration we have configured thus far, both MPP instances would see the
+remote MySQL server as down. Site 1 MPP would fail the SECONDARY server, and Site 2
+MPP would fail the PRIMARY server and enact a failover to the SECONDARY server.
+Should the DOS attack stop, we now have two ACTIVE MySQL servers in each location.
+Right away we find this is very bad. Since the PRIMARY server is in a STATE of
+"FAIL", the Site 2 MPP does not care if the SECONDARY server is out of sync with
+the PRIMARY server.
+<br/>
+Never fear though, this case has been accounted for by the use of a method called
+checkpoints. You configure various checkpoints for the MPP pool at Site 1 like
+http:www.google.com, http:www.yahoo.com, ping:router.site2.domain.com, and
+ping:internalserver.site2.domain.com (Note that some of the site 1 MPP pool
+checkpoints are systems inside site 2 network) Should ALL of these checkpoints
+fail, Site 1 MPP will consider its MPP pool to be FAIL because its connection
+to the outisde world and remote side has gone down. Site 1 MPP assumes that
+Site 2 MPP will perform a failover.
+<br/>
+<br/>
+So, now, does it look like it will work? In real-world field tests it works with
+various non-serious and non-fatal issues. Some of these issues being Site 1 looses
+connectivity for 6 minutes to Site 2, thus failing the SECONDARY MySQL server, or
+vise-versa. You just have to be monitoring the MPP pools and maintain them.
+<br/>
+Once MPP is further advanced to communicate with other instances, and options like
+self recovery is finalized, issues like this will be less of an anoyance.
+It is recommended you tie the MPP instances into a monitoring system like Nagios
+so you can be kept alert of how MPP is managing the failover strategy.
+If you do not want to use Nagios, at the very least you can write some shell
+scripts to run in cron and e-mail/page you alerts if the STATE and STATUS of
+MySQL servers in the MPP pools change.
+
+<br clear="all">
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>An Example Strategy for a Multi-Site Web Server Cluster and MySQL Database Failover Deployment</h3>
+
+
+<table>
+<tr><td width="50%">
+<br clear="all" />
+<a href="MPP_Software_Overview_6.png">
+<img align="left" src="MPP_Software_Overview_6.png" width="100%" border="0">
+</a>
+
+</td><td valign="top">
+
+<blockquote><p>
+Let's now take a look at a collation deployment we might see in the real world.
+In the following example you can see our LVS+MPP configuration with MySQL at each
+site. And now we also see the Geronimo Web Server additionally being served
+through LVS as well, although they do not use MPP. We still have the F5 BigIP
+SmartDNS, but now with redundant systems. Additionally the LVS has been made
+redundant in each location through the use of Heartbeat from the Linux
+High-availability project. A solution with Heartbeat has the advantage
+of removing the single point of failure.
+</p></blockquote>
+
+<p>
+<ul>
+  <font size="+1"><b>Technology Used in this Example Strategy:</b></font>
+  <ul>
+    <li> <b>MySQL</b>: MySQL Database (SQL Database)
+    <li> <b>Geronimo</b>: Apache Geronimo (J2EE Web Server)
+    <li> <b>LVS</b>: Redhat Clustering Suite named Piranha (based on LVS) (Cluster and Failover Load Balancing Manager)
+      <br/> <em>Alternative: Linux Virtual Server (Open Source)</em>
+    <li> <b>SmartDNS</b>: F5 Big IP DNS (Smart DNS Server)
+      <br/> <em>Alternative: <a href="http://eddie.sourceforge.net/lbdns.html">
+                             Eddie Enhanced DNS Server</a> (Open Source)</em>
+    <li> <b>VPN</b>: ipsec / openswan (Encrypted VPN Tunnel)
+    <li> <b>Firewall</b>: iptables (Network Firewall)
+    <li> <b>Router</b>: route (Network Router)
+    <li> <b>Linux</b>: Fedora Core 5+ (Server Operating System)
+      <br /> <em>Alternative: Red Hat Enterprise Linux 4</em>
+      <br /> <em>Alternative: OpenBSD 3.3+ for Network Operation Servers</em>
+  </ul>
+</ul>
+</p>
+
+</td></tr>
+</table>
+
+<br clear="all">
+</p>
+
+
+<br />
+<hr size="1" />
+
+<p>
+
+<h3>More About MPP and the Future</h3>
+<br/>
+
+MPP is probably one of the first intelligent software failover solutions for MySQL.
+And it really is intended to be a software failover solution. Even in the future
+when MySQL Clustering becomes more of a stable technology solutions, It is expected
+that MPP will still have its place.
+<br/>
+<br/>
+The power of MPP is its plugability into a load-balancing mechanism. This allows the
+powerful leverage of all load-balancing solutions teamed with intelligent management
+through MPP.
+<br/>
+<br/>
+The first release was intended as mostly a stable functional version, and still has a
+lot to be hoping for. The future intention is to mostly get multiple MPP instances
+working together intelligently. With this, MPP instances can negotiate with remote
+sites what servers should be UP or DOWN in LVS and ensure a better guarantee in the
+failover process, not to mention to allow auto-recovery in a multiple MPP instance
+installation.
+<br/>
+<br/>
+So what is the sudo-wish list? (I say sudo because the real wish list will be much longer.)
+<ol>
+  <li> More easily usable API (needs to be polished)
+  <li> More plugable brain center so new logic can be easily integrated
+  <li> Communication between multiple MPP deployments
+  <li> Tried and proven Auto/Self Recovery mechanisms for pool members
+</ol>
+
+It is with great hope that MPP can be useful.
+
+<br clear="all">
+</p>
+
+<br/><br/><br/>
+
+<address class="copyright">
+&copy; 2006 Center for the Application of Information Technologies
+</address>
+
+</body>
+</html>
+
